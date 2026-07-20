@@ -1,12 +1,13 @@
 import { defineManifest } from '@crxjs/vite-plugin';
-import { name, version } from './package.json';
+import { version } from './package.json';
 import { createManifestVersion } from './scripts/manifest-version.mjs';
 
 const manifestVersion = createManifestVersion(version);
+const PRODUCT_NAME = 'JP QA Data Filler';
 
 const EXTENSION_NAMES = {
-  build: name,
-  serve: `[DEV] ${name}`,
+  build: PRODUCT_NAME,
+  serve: `[DEV] ${PRODUCT_NAME}`,
 } as const;
 
 const createIconFileSuffix = (command: 'build' | 'serve') =>

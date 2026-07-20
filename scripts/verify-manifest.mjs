@@ -107,6 +107,10 @@ report(
   manifest.manifest_version === 3,
   `manifest_version must be 3; received ${JSON.stringify(manifest.manifest_version)}.`,
 );
+report(
+  manifest.name === 'JP QA Data Filler',
+  `name must equal "JP QA Data Filler"; received ${JSON.stringify(manifest.name)}.`,
+);
 expectSet(manifest.permissions, EXPECTED_PERMISSIONS, 'permissions');
 expectSet(
   manifest.host_permissions,
