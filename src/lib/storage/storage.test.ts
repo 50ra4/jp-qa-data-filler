@@ -20,31 +20,58 @@ afterEach(() => {
 
 describe('typed storage', () => {
   it('returns the schema default value when storage has no value', async () => {
-    await expect(getStorageValue('exampleSetting')).resolves.toBe('未設定');
+    await expect(getStorageValue('fillerSettings')).resolves.toEqual({
+      defaultPreset: 'valid',
+      defaultSeed: 'jpqa-001',
+      requireConfirmation: true,
+    });
   });
 
   it('sets and gets a typed value', async () => {
-    await setStorageValue('exampleSetting', '保存済み');
+    const settings = {
+      defaultPreset: 'boundary' as const,
+      defaultSeed: 'boundary-001',
+      requireConfirmation: false,
+    };
+    await setStorageValue('fillerSettings', settings);
 
-    await expect(getStorageValue('exampleSetting')).resolves.toBe('保存済み');
+    await expect(getStorageValue('fillerSettings')).resolves.toEqual(settings);
   });
 
   it('removes a value and falls back to the schema default value', async () => {
-    await setStorageValue('exampleSetting', '削除予定');
-    await removeStorageValue('exampleSetting');
+    await setStorageValue('fillerSettings', {
+      defaultPreset: 'invalid',
+      defaultSeed: 'remove-me',
+      requireConfirmation: false,
+    });
+    await removeStorageValue('fillerSettings');
 
-    await expect(getStorageValue('exampleSetting')).resolves.toBe('未設定');
+    await expect(getStorageValue('fillerSettings')).resolves.toEqual({
+      defaultPreset: 'valid',
+      defaultSeed: 'jpqa-001',
+      requireConfirmation: true,
+    });
   });
 
   it('subscribes to typed storage changes for a key', async () => {
     const listener = vi.fn();
-    const unsubscribe = onStorageValueChanged('exampleSetting', listener);
+    const unsubscribe = onStorageValueChanged('fillerSettings', listener);
+    const before = {
+      defaultPreset: 'valid' as const,
+      defaultSeed: 'before',
+      requireConfirmation: true,
+    };
+    const after = {
+      defaultPreset: 'boundary' as const,
+      defaultSeed: 'after',
+      requireConfirmation: false,
+    };
 
-    await setStorageValue('exampleSetting', '変更前');
+    await setStorageValue('fillerSettings', before);
     listener.mockClear();
-    await setStorageValue('exampleSetting', '変更後');
+    await setStorageValue('fillerSettings', after);
 
-    expect(listener).toHaveBeenCalledWith('変更後', '変更前');
+    expect(listener).toHaveBeenCalledWith(after, before);
 
     unsubscribe();
     expect(

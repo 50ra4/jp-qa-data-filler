@@ -1,11 +1,25 @@
+import type { FillerPreset } from '../generator/types';
+
+export type FillerSettings = {
+  defaultPreset: FillerPreset;
+  defaultSeed: string;
+  requireConfirmation: boolean;
+};
+
 type AppStorageValues = {
-  exampleSetting: string;
+  fillerSettings: FillerSettings;
+};
+
+export const DEFAULT_FILLER_SETTINGS: FillerSettings = {
+  defaultPreset: 'valid',
+  defaultSeed: 'jpqa-001',
+  requireConfirmation: true,
 };
 
 export const storageSchema = {
-  exampleSetting: {
-    area: 'sync',
-    defaultValue: '未設定',
+  fillerSettings: {
+    area: 'local',
+    defaultValue: DEFAULT_FILLER_SETTINGS,
   },
 } as const satisfies {
   [Key in keyof AppStorageValues]: {
