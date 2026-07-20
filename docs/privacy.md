@@ -6,7 +6,11 @@ JP QA Data Filler processes form structure and synthetic values locally in the u
 
 ## Data collection and transmission
 
-The extension does not collect, sell, share, or transmit personal data, form values, generated profiles, browsing history, page URLs, field names, or page HTML. It has no account system, backend, analytics SDK, crash-reporting SDK, advertising SDK, remote configuration, or remote-hosted code.
+The extension does not collect, sell, share, or independently transmit personal data, form values, generated profiles, browsing history, page URLs, field names, or page HTML. It has no account system, network client, backend, analytics SDK, crash-reporting SDK, advertising SDK, remote configuration, or remote-hosted code.
+
+## Host-page behavior
+
+To update controlled forms, the extension dispatches standard bubbling `input` and `change` events after assigning a value. Scripts belonging to the page can react to those events and may autosave, submit, or transmit the inserted values under that site's own behavior and privacy terms. The extension cannot guarantee or control those page-side effects. Use it only on local fixtures or dedicated QA/demonstration environments where that behavior is safe.
 
 ## Data stored on the device
 

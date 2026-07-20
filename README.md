@@ -8,14 +8,15 @@ JP QA Data Filler was derived from [`50ra4/crx-vite-ts-react-template` v1.0.0](h
 
 [日本語 README](docs/README.ja.md)
 
-## Safety guarantees
+## Safety boundaries
 
 - Runs only after the user opens the popup and explicitly chooses to fill the active tab.
-- Never clicks controls, accepts terms, or submits a form.
+- Never clicks controls, accepts terms, or invokes form submission itself.
 - Never fills passwords, one-time codes, credit-card fields, hidden fields, disabled fields, or read-only fields.
 - Does not include a persistent content script, host permission, backend, analytics SDK, or remote code.
 - Stores only the default preset, seed, and confirmation preference in `chrome.storage.local`.
-- Does not save or transmit generated profiles, form values, page URLs, field names, or page HTML.
+- Does not save or independently transmit generated profiles, form values, page URLs, field names, or page HTML.
+- Dispatches bubbling `input` and `change` events for controlled forms. Host-page scripts can react by autosaving, submitting, or transmitting the inserted values; use only local fixtures or dedicated QA environments.
 
 See the [privacy policy](docs/privacy.md) for the complete data statement.
 
@@ -38,10 +39,10 @@ See the [privacy policy](docs/privacy.md) for the complete data statement.
 
 ## Use
 
-1. Open a development, QA, or dedicated demonstration form.
+1. Open a local fixture or dedicated QA/demonstration form whose event-driven behavior is safe to trigger.
 2. Open the extension popup.
 3. Choose a preset and seed, then review the generated preview.
-4. Select **Fill current form** and confirm if confirmation is enabled.
+4. Select **Fill current form** and review the event-side-effect warning before confirming.
 5. Review the result in the popup and inspect the form. Submit manually only if appropriate for the test environment.
 
 The `valid` preset validates string shapes only. Generated phone numbers, postal codes, and addresses are synthetic and are not guaranteed to be assigned, deliverable, or real.
@@ -58,11 +59,11 @@ The `valid` preset validates string shapes only. Generated phone numbers, postal
 
 ## Permissions
 
-| Permission | Why it is required |
-| --- | --- |
+| Permission  | Why it is required                                                                   |
+| ----------- | ------------------------------------------------------------------------------------ |
 | `activeTab` | Grants temporary access to the tab only after the user invokes the extension action. |
-| `scripting` | Injects the self-contained fill function for the explicit fill action. |
-| `storage` | Stores the default preset, seed, and confirmation preference locally. |
+| `scripting` | Injects the self-contained fill function for the explicit fill action.               |
+| `storage`   | Stores the default preset, seed, and confirmation preference locally.                |
 
 Production `host_permissions`, `content_scripts`, background service workers, and `web_accessible_resources` are absent. See [Web Store copy and permission text](docs/web-store.md).
 

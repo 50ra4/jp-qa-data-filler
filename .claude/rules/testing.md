@@ -15,7 +15,7 @@ Vitest + jsdom (`src/**/*.test.{ts,tsx}`) or Node (`scripts/**/*.test.mjs` with
   Node environment with the file pragma above.
 - Run: `npm test`; watch mode: `npm test -- --watch`.
 - Tests that use Chrome APIs must call `installChromeFake` from
-  `src/lib/testing/chromeFake.ts`. Do not duplicate runtime messaging or storage
+  `src/lib/testing/chromeFake.ts`. Do not duplicate scripting, tabs, or storage
   mocks in individual test files.
 - Because `installChromeFake` injects the global with `vi.stubGlobal`, call
   `vi.unstubAllGlobals()` in `afterEach`.

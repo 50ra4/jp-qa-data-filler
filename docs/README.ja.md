@@ -9,11 +9,12 @@
 ## 安全性
 
 - ユーザーがpopupを開き、明示的に入力操作した場合だけ現在タブで動作します。
-- buttonをclickせず、規約へ同意せず、フォームをsubmitしません。
+- buttonをclickせず、規約へ同意せず、拡張機能自体はフォーム送信を呼び出しません。
 - password、OTP、カード情報、hidden、disabled、readonlyへ入力しません。
 - 常駐content script、host permission、background、外部backend、解析SDK、remote codeはありません。
 - `chrome.storage.local`へ保存するのは既定preset、seed、実行前確認設定だけです。
-- 生成profile、フォーム値、URL、field名、HTMLを保存・送信しません。
+- 生成profile、フォーム値、URL、field名、HTMLを拡張機能が保存・外部送信することはありません。
+- controlled form対応のためbubblingな`input`・`change` eventを送ります。ページ側の処理が反応して値を自動保存・送信・submitする可能性があるため、local fixtureまたは専用QA環境だけで使用してください。
 
 詳細は[プライバシーポリシー](privacy.md)を参照してください。
 
@@ -31,10 +32,10 @@
 
 ## 使い方
 
-1. 開発、QA、専用デモ環境のフォームを開きます。
+1. event駆動の副作用を実行してよいlocal fixtureまたは専用QA・デモ環境のフォームを開きます。
 2. 拡張popupを開きます。
 3. presetとseedを選び、生成プレビューを確認します。
-4. **現在のフォームへ入力**を押し、確認設定がONなら実行を確定します。
+4. **現在のフォームへ入力**を押し、event副作用の警告を確認してから実行を確定します。
 5. popupの結果とフォームを確認します。送信が必要なテストでは、適切な環境か確認して手動送信します。
 
 `valid`は文字列形式上の妥当性だけを示します。電話番号、郵便番号、住所の割当・配達可能性・実在性は保証しません。
@@ -51,11 +52,11 @@
 
 ## 権限
 
-| 権限 | 用途 |
-| --- | --- |
+| 権限        | 用途                                                   |
+| ----------- | ------------------------------------------------------ |
 | `activeTab` | 拡張actionを起点に、現在タブへ一時的にアクセスするため |
-| `scripting` | 明示的な入力操作時だけ自己完結した関数を注入するため |
-| `storage` | 既定preset、seed、実行前確認設定を端末内へ保存するため |
+| `scripting` | 明示的な入力操作時だけ自己完結した関数を注入するため   |
+| `storage`   | 既定preset、seed、実行前確認設定を端末内へ保存するため |
 
 本番manifestに`host_permissions`、`content_scripts`、background、`web_accessible_resources`はありません。
 

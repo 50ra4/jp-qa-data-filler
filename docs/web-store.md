@@ -30,9 +30,9 @@ JP QA Data Filler helps developers and QA engineers repeatedly test Japanese web
 
 Choose a valid, boundary, or intentionally invalid preset and a seed. The same preset and seed always produce the same synthetic profile, making bug reproduction straightforward.
 
-Safety is conservative by design: the extension never submits forms and never fills passwords, one-time codes, card information, hidden controls, disabled controls, or read-only controls. It runs only after an explicit popup action and reports what was filled, skipped, or left unmatched.
+Safety is conservative by design: the extension does not click controls or invoke form submission, and it never fills passwords, one-time codes, card information, hidden controls, disabled controls, or read-only controls. It runs only after an explicit popup action and reports what was filled, skipped, or left unmatched.
 
-All processing stays in the browser. There is no account, backend, analytics, advertising, remote code, persistent content script, or broad host permission.
+The extension generates and fills data locally and has no network client, account, backend, analytics, advertising, remote code, persistent content script, or broad host permission. It dispatches standard `input` and `change` events for controlled forms, so the host page's own scripts may autosave, submit, or transmit inserted values. Use only local fixtures or dedicated QA environments.
 
 ## Japanese store description
 
@@ -46,9 +46,9 @@ JP QA Data Fillerは、日本向けWebフォームを繰り返し確認する開
 
 通常形式、境界値、不正形式のpresetとseedを選択できます。同じpresetとseedからは常に同じ合成profileを生成するため、不具合を再現しやすくなります。
 
-安全性を優先し、フォームを送信せず、password、OTP、カード情報、hidden、disabled、readonlyへ入力しません。popupから明示的に実行した場合だけ動作し、入力・skip・判定不能の結果を表示します。
+安全性を優先し、拡張機能自体はcontrolのclickやフォーム送信を行わず、password、OTP、カード情報、hidden、disabled、readonlyへ入力しません。popupから明示的に実行した場合だけ動作し、入力・skip・判定不能の結果を表示します。
 
-処理はブラウザ内で完結します。アカウント、外部backend、解析、広告、remote code、常駐content script、広範なhost permissionはありません。
+拡張機能はデータ生成と入力をlocalで処理し、network通信機能、アカウント、外部backend、解析、広告、remote code、常駐content script、広範なhost permissionを持ちません。controlled form対応のため標準の`input`・`change` eventを送るので、ページ側のscriptが値を自動保存・送信・submitする可能性があります。local fixtureまたは専用QA環境だけで使用してください。
 
 ## Screenshot checklist
 
