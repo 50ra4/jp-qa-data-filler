@@ -18,6 +18,7 @@ type ChromeFakeOptions = {
 };
 
 export type ChromeFake = {
+  api: ChromeApiFake;
   chrome: ChromeApiFake;
   setRuntimeSender: (sender: chrome.runtime.MessageSender) => void;
 };
@@ -250,6 +251,7 @@ export const createChromeFake = (
   };
 
   return {
+    api: chromeFake,
     chrome: chromeFake,
     setRuntimeSender: (sender) => {
       runtimeSender = sender;
