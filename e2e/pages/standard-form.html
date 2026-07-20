@@ -32,18 +32,28 @@
       <input autocomplete="current-password" />
       <input autocomplete="one-time-code" />
       <input autocomplete="cc-number" />
+      <input
+        data-sensitive-japanese
+        autocomplete="tel"
+        aria-label="ワンタイムパスワード"
+      />
       <input data-sensitive-hidden type="hidden" autocomplete="email" />
-      <input disabled autocomplete="email" />
+      <input data-explicit-disabled disabled autocomplete="email" />
+      <fieldset disabled>
+        <input data-fieldset-disabled autocomplete="email" />
+      </fieldset>
       <input readonly autocomplete="email" />
       <button type="submit">送信</button>
     </form>
     <output id="submit-count">0</output>
     <script>
-      document.querySelector('#fixture-form').addEventListener('submit', (event) => {
-        event.preventDefault();
-        const output = document.querySelector('#submit-count');
-        output.textContent = String(Number(output.textContent) + 1);
-      });
+      document
+        .querySelector('#fixture-form')
+        .addEventListener('submit', (event) => {
+          event.preventDefault();
+          const output = document.querySelector('#submit-count');
+          output.textContent = String(Number(output.textContent) + 1);
+        });
     </script>
   </body>
 </html>

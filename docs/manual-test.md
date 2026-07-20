@@ -23,8 +23,8 @@ Run only against local fixtures or a dedicated QA environment. Do not use produc
 
 ## Safety cases
 
-- Confirm password, `current-password`, `new-password`, `one-time-code`, and every `cc-*` field stay unchanged.
-- Confirm hidden, file, checkbox, radio, submit, button, disabled, and readonly controls stay unchanged.
+- Confirm password, `current-password`, `new-password`, `one-time-code`, every `cc-*` field, and Japanese labels such as `ワンタイムパスワード`, `暗証番号`, `認証コード`, and `カード名義` stay unchanged.
+- Confirm hidden, file, checkbox, radio, submit, button, explicitly disabled, `aria-disabled`, disabled-fieldset descendant, and readonly controls stay unchanged.
 - On a form with no page handler that submits, attach a `submit` listener and confirm its count remains zero.
 - Add a page `input` handler with a local autosave counter and confirm it runs, proving why the popup warning is required. Do not connect this fixture to a network endpoint.
 - Confirm an ambiguous label such as `名前` remains unchanged and appears as ambiguous.

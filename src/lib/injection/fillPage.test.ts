@@ -34,11 +34,10 @@ describe('fillPage', () => {
     ] as const;
     setBody(
       `<form>${mappings
-        .map(
-          ([token, kind]) =>
-            kind === 'prefecture'
-              ? `<select autocomplete="${token}" data-kind="${kind}"><option>${profile.prefecture}</option></select>`
-              : `<input autocomplete="${token}" data-kind="${kind}">`,
+        .map(([token, kind]) =>
+          kind === 'prefecture'
+            ? `<select autocomplete="${token}" data-kind="${kind}"><option>${profile.prefecture}</option></select>`
+            : `<input autocomplete="${token}" data-kind="${kind}">`,
         )
         .join('')}</form>`,
     );
@@ -48,7 +47,8 @@ describe('fillPage', () => {
     expect(result.filled).toHaveLength(mappings.length);
     for (const [, kind] of mappings) {
       expect(
-        document.querySelector<HTMLInputElement>(`[data-kind="${kind}"]`)?.value,
+        document.querySelector<HTMLInputElement>(`[data-kind="${kind}"]`)
+          ?.value,
       ).toBe(profile[kind]);
     }
     expect(result.filled.every(({ confidence }) => confidence === 100)).toBe(
@@ -75,11 +75,10 @@ describe('fillPage', () => {
     ] as const;
     setBody(
       `<form>${labels
-        .map(
-          ([label, kind]) =>
-            kind === 'prefecture'
-              ? `<label>${label}<select data-kind="${kind}"><option value="${profile.prefecture}">${profile.prefecture}</option></select></label>`
-              : `<label>${label}<input data-kind="${kind}"></label>`,
+        .map(([label, kind]) =>
+          kind === 'prefecture'
+            ? `<label>${label}<select data-kind="${kind}"><option value="${profile.prefecture}">${profile.prefecture}</option></select></label>`
+            : `<label>${label}<input data-kind="${kind}"></label>`,
         )
         .join('')}</form>`,
     );
@@ -110,6 +109,11 @@ describe('fillPage', () => {
     '<input autocomplete="cc-number">',
     '<input name="credit_card_number">',
     '<label>CVV<input></label>',
+    '<input autocomplete="tel" aria-label="ワンタイムパスワード">',
+    '<input autocomplete="name" aria-label="カード名義">',
+    '<input autocomplete="email" name="暗証番号">',
+    '<label>認証コード<input autocomplete="tel"></label>',
+    '<input autocomplete="name" placeholder="ｾｷｭﾘﾃｨｺｰﾄﾞ">',
   ])('機密項目を除外する: %s', (control) => {
     setBody(control);
 
@@ -124,6 +128,7 @@ describe('fillPage', () => {
     ['<input hidden autocomplete="email">', 'HIDDEN'],
     ['<input style="display:none" autocomplete="email">', 'HIDDEN'],
     ['<input disabled autocomplete="email">', 'DISABLED'],
+    ['<input aria-disabled="true" autocomplete="email">', 'DISABLED'],
     ['<input readonly autocomplete="email">', 'READONLY'],
     ['<input type="file" name="email">', 'UNSUPPORTED_CONTROL'],
     ['<input type="checkbox" name="email">', 'UNSUPPORTED_CONTROL'],
@@ -135,6 +140,43 @@ describe('fillPage', () => {
     const result = fillPage(profile, 'valid');
 
     expect(result.skipped[0]?.reason).toBe(reason);
+  });
+
+  test('disabled fieldset配下では値もeventも注入しない', () => {
+    setBody(`
+      <fieldset disabled>
+        <label>メールアドレス<input autocomplete="email"></label>
+      </fieldset>
+    `);
+    const input = document.querySelector('input');
+    const inputEvent = vi.fn();
+    const changeEvent = vi.fn();
+    input?.addEventListener('input', inputEvent);
+    input?.addEventListener('change', changeEvent);
+
+    const result = fillPage(profile, 'valid');
+
+    expect(input?.value).toBe('');
+    expect(inputEvent).not.toHaveBeenCalled();
+    expect(changeEvent).not.toHaveBeenCalled();
+    expect(result.skipped).toContainEqual(
+      expect.objectContaining({ reason: 'DISABLED' }),
+    );
+  });
+
+  test('disabled fieldsetの最初のlegend配下はHTMLの有効状態に従う', () => {
+    setBody(`
+      <fieldset disabled>
+        <legend><input autocomplete="email"></legend>
+      </fieldset>
+    `);
+
+    const result = fillPage(profile, 'valid');
+
+    expect(document.querySelector<HTMLInputElement>('input')?.value).toBe(
+      profile.email,
+    );
+    expect(result.filled).toHaveLength(1);
   });
 
   test('native setterでinputとtextareaを更新しinput/changeだけを送る', () => {

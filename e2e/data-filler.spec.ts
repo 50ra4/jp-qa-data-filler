@@ -23,15 +23,17 @@ test('standard formへ入力し、機密項目とsubmitを安全に除外する'
   await expect(extensionPage.getByText(/Skipped: [1-9]/u)).toBeVisible();
   await expect(testPage.locator('[autocomplete="name"]')).not.toHaveValue('');
   await expect(testPage.locator('#email')).toHaveValue(/@example\.com$/u);
-  await expect(testPage.locator('[autocomplete="current-password"]')).toHaveValue(
-    '',
-  );
+  await expect(
+    testPage.locator('[autocomplete="current-password"]'),
+  ).toHaveValue('');
   await expect(testPage.locator('[autocomplete="one-time-code"]')).toHaveValue(
     '',
   );
   await expect(testPage.locator('[autocomplete="cc-number"]')).toHaveValue('');
+  await expect(testPage.locator('[data-sensitive-japanese]')).toHaveValue('');
   await expect(testPage.locator('[data-sensitive-hidden]')).toHaveValue('');
-  await expect(testPage.locator('[disabled]')).toHaveValue('');
+  await expect(testPage.locator('[data-explicit-disabled]')).toHaveValue('');
+  await expect(testPage.locator('[data-fieldset-disabled]')).toHaveValue('');
   await expect(testPage.locator('[readonly]')).toHaveValue('');
   await expect(testPage.locator('#submit-count')).toHaveText('0');
 

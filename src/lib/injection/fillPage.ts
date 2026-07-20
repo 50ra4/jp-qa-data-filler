@@ -58,6 +58,21 @@ export const fillPage = (
     'cvv',
     'cvc',
     'securitycode',
+    'パスワード',
+    'パスコード',
+    '暗証',
+    '認証コード',
+    '認証番号',
+    '確認コード',
+    'ワンタイムパスワード',
+    'ワンタイムコード',
+    'セキュリティコード',
+    'セキュリティ番号',
+    'カード',
+    'クレジット',
+    'デビット',
+    '秘密の質問',
+    '秘密の答え',
   ];
   const unsupportedInputTypes = new Set([
     'button',
@@ -306,7 +321,10 @@ export const fillPage = (
         result.skipped.push({ descriptor, reason: 'SENSITIVE_FIELD' });
         continue;
       }
-      if (control.disabled) {
+      if (
+        control.matches(':disabled') ||
+        control.getAttribute('aria-disabled') === 'true'
+      ) {
         result.skipped.push({ descriptor, reason: 'DISABLED' });
         continue;
       }
