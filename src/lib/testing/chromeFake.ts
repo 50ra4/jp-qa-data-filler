@@ -12,6 +12,9 @@ type StorageChangeListener = (
 
 type ChromeFakeOptions = {
   extensionId?: string;
+  activeTab?: { id?: number; url?: string };
+  executeScriptResult?: { frameId: number; result?: unknown }[];
+  executeScriptError?: Error;
 };
 
 export type ChromeFake = {
@@ -20,6 +23,14 @@ export type ChromeFake = {
 };
 
 type ChromeApiFake = {
+  tabs: {
+    query: (queryInfo: chrome.tabs.QueryInfo) => Promise<chrome.tabs.Tab[]>;
+  };
+  scripting: {
+    executeScript: (
+      injection: Record<string, unknown>,
+    ) => Promise<{ frameId: number; result?: unknown }[]>;
+  };
   runtime: {
     id: string;
     onMessage: {
@@ -154,6 +165,7 @@ export const createChromeFake = (
   options: ChromeFakeOptions = {},
 ): ChromeFake => {
   const extensionId = options.extensionId ?? 'test-extension-id';
+  const activeTab = options.activeTab;
   const runtimeListeners = new Set<RuntimeMessageListener>();
   const storageListeners = new Set<StorageChangeListener>();
   let runtimeSender: chrome.runtime.MessageSender = { id: extensionId };
@@ -168,6 +180,17 @@ export const createChromeFake = (
   };
 
   const chromeFake: ChromeApiFake = {
+    tabs: {
+      query: vi.fn(async (_queryInfo: chrome.tabs.QueryInfo) =>
+        activeTab ? ([activeTab] as chrome.tabs.Tab[]) : [],
+      ),
+    },
+    scripting: {
+      executeScript: vi.fn(async (_injection: Record<string, unknown>) => {
+        if (options.executeScriptError) throw options.executeScriptError;
+        return options.executeScriptResult ?? [];
+      }),
+    },
     runtime: {
       id: extensionId,
       onMessage: {

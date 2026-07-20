@@ -83,4 +83,34 @@ describe('Chrome fake', () => {
     await fake.chrome.storage.local.clear();
     await expect(fake.chrome.storage.local.get()).resolves.toEqual({});
   });
+
+  it('returns the configured active tab', async () => {
+    const activeTab = { id: 12, url: 'https://example.test/form' };
+    const fake = createChromeFake({ activeTab });
+
+    await expect(
+      fake.chrome.tabs.query({ active: true, currentWindow: true }),
+    ).resolves.toEqual([activeTab]);
+  });
+
+  it('returns or rejects with the configured executeScript outcome', async () => {
+    const scriptResult = [{ frameId: 0, result: { ok: true } }];
+    const success = createChromeFake({ executeScriptResult: scriptResult });
+    const failure = createChromeFake({
+      executeScriptError: new Error('denied'),
+    });
+
+    await expect(
+      success.chrome.scripting.executeScript({
+        target: { tabId: 12 },
+        func: () => true,
+      }),
+    ).resolves.toEqual(scriptResult);
+    await expect(
+      failure.chrome.scripting.executeScript({
+        target: { tabId: 12 },
+        func: () => true,
+      }),
+    ).rejects.toThrow('denied');
+  });
 });
