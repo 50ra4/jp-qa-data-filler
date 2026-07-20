@@ -17,4 +17,9 @@ describe('getMessages', () => {
       Object.keys(getMessages('en')),
     );
   });
+
+  test('page側event handlerによる保存・送信リスクを両言語で明示する', () => {
+    expect(getMessages('ja').confirmationBody).toContain('自動保存・送信');
+    expect(getMessages('en').confirmationBody).toContain('save or transmit');
+  });
 });

@@ -32,11 +32,12 @@ const ENGLISH_MESSAGES = {
   openSettings: 'Open settings',
   safetyTitle: 'Safety notice',
   syntheticOnly: 'Synthetic test data only.',
-  neverSubmits: 'This extension never submits the form.',
+  submissionSafety:
+    'The extension does not click or invoke form submission. Page scripts can react to input/change events and may save or transmit the values.',
   notProduction: 'Do not use on production systems.',
   confirmationTitle: 'Fill the current form?',
   confirmationBody:
-    'Only recognized non-sensitive fields in the active tab will be changed.',
+    'Only recognized non-sensitive fields will change. The page receives input/change events, so its scripts may save or transmit the values. Run only in a dedicated QA environment.',
   confirmFill: 'Fill form',
   cancel: 'Cancel',
   resultTitle: 'Result',
@@ -96,11 +97,12 @@ const JAPANESE_MESSAGES: Messages = {
   openSettings: '設定を開く',
   safetyTitle: '安全上の注意',
   syntheticOnly: '合成したテストデータのみを使用します。',
-  neverSubmits: 'この拡張機能はフォームを送信しません。',
+  submissionSafety:
+    '拡張機能自体は送信操作を行いません。ページ側の処理はinput/changeイベントに反応し、値を自動保存・送信する可能性があります。',
   notProduction: '本番環境では使用しないでください。',
   confirmationTitle: '現在のフォームへ入力しますか？',
   confirmationBody:
-    '現在タブで判定できた機密情報以外の項目だけを変更します。',
+    'ページへinput/changeイベントを送るため、ページ側の処理が値を自動保存・送信する可能性があります。専用のQA環境でのみ実行してください。',
   confirmFill: '入力を実行',
   cancel: 'キャンセル',
   resultTitle: '実行結果',

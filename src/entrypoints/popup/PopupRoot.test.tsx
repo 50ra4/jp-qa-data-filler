@@ -6,14 +6,7 @@ import {
   screen,
   waitFor,
 } from '@testing-library/react';
-import {
-  afterEach,
-  beforeEach,
-  describe,
-  expect,
-  test,
-  vi,
-} from 'vitest';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { generateProfile } from '../../lib/generator/generateProfile';
 import type { FillExecutionResult } from '../../lib/injection/types';
@@ -54,7 +47,9 @@ describe('PopupRoot', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('Synthetic test data only.')).toBeInTheDocument();
     expect(
-      screen.getByText('This extension never submits the form.'),
+      screen.getByText(
+        'The extension does not click or invoke form submission. Page scripts can react to input/change events and may save or transmit the values.',
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByText('Do not use on production systems.'),
@@ -89,6 +84,11 @@ describe('PopupRoot', () => {
     );
 
     expect(screen.getByRole('dialog')).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        'ページへinput/changeイベントを送るため、ページ側の処理が値を自動保存・送信する可能性があります。専用のQA環境でのみ実行してください。',
+      ),
+    ).toBeInTheDocument();
     expect(onExecute).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: '入力を実行' }));
     await waitFor(() => expect(onExecute).toHaveBeenCalledOnce());

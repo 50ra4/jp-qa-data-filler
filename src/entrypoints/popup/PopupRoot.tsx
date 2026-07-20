@@ -118,7 +118,11 @@ export const PopupRoot = ({
           >
             {PRESETS.map((value) => (
               <option key={value} value={value}>
-                {messages[`preset${value[0].toUpperCase()}${value.slice(1)}` as keyof typeof messages]}
+                {
+                  messages[
+                    `preset${value[0].toUpperCase()}${value.slice(1)}` as keyof typeof messages
+                  ]
+                }
               </option>
             ))}
           </select>
@@ -144,12 +148,9 @@ export const PopupRoot = ({
         </dl>
       </section>
 
-      <aside
-        aria-label={messages.safetyTitle}
-        className="jpqa-popup__safety"
-      >
+      <aside aria-label={messages.safetyTitle} className="jpqa-popup__safety">
         <strong>{messages.syntheticOnly}</strong>
-        <span>{messages.neverSubmits}</span>
+        <span>{messages.submissionSafety}</span>
         <span>{messages.notProduction}</span>
       </aside>
 
@@ -199,9 +200,7 @@ export const PopupRoot = ({
               {messages.countSuffix}
             </strong>
           </div>
-          {result.page.filled.length === 0 && (
-            <p>{messages.noFieldsFilled}</p>
-          )}
+          {result.page.filled.length === 0 && <p>{messages.noFieldsFilled}</p>}
           {reasonCounts.size > 0 && (
             <div>
               <h3>{messages.skipReasonsTitle}</h3>

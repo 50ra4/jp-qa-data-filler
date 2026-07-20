@@ -31,13 +31,7 @@ export const fillPage = (
       'お名前カナ',
       'fullnamekana',
     ],
-    familyNameKana: [
-      '姓カナ',
-      '姓かな',
-      'セイ',
-      '苗字カナ',
-      'familynamekana',
-    ],
+    familyNameKana: ['姓カナ', '姓かな', 'セイ', '苗字カナ', 'familynamekana'],
     givenNameKana: [
       '名カナ',
       '名かな',
@@ -96,7 +90,9 @@ export const fillPage = (
     const root = rootByControl(control);
     const labelledBy = control.getAttribute('aria-labelledby')?.split(/\s+/u);
     for (const id of labelledBy ?? []) {
-      const referenced = root.querySelector(`[id="${id.replaceAll('"', '\\"')}"]`);
+      const referenced = root.querySelector(
+        `[id="${id.replaceAll('"', '\\"')}"]`,
+      );
       if (referenced?.textContent?.trim()) {
         values.push(referenced.textContent.trim());
       }
@@ -172,7 +168,8 @@ export const fillPage = (
     let element: HTMLElement | null = control;
     while (element) {
       const style = getComputedStyle(element);
-      if (style.display === 'none' || style.visibility === 'hidden') return true;
+      if (style.display === 'none' || style.visibility === 'hidden')
+        return true;
       const root = element.getRootNode();
       element =
         element.parentElement ??
@@ -270,6 +267,8 @@ export const fillPage = (
     throw new Error('value setter is unavailable');
   };
   const dispatchValueEvents = (control: Element) => {
+    // Controlled forms require these events. Host-page handlers may autosave,
+    // submit, or transmit values, so the popup and docs disclose that risk.
     control.dispatchEvent(
       new Event('input', { bubbles: true, composed: true }),
     );
@@ -296,9 +295,9 @@ export const fillPage = (
       }
     }
     const controls = Array.from(
-      root.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
-        'input, textarea, select',
-      ),
+      root.querySelectorAll<
+        HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+      >('input, textarea, select'),
     );
     for (const control of controls) {
       const labels = labelTexts(control);
