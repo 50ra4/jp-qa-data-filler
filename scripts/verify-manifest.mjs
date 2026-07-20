@@ -5,11 +5,8 @@ import { fileURLToPath } from 'node:url';
 import { createManifestVersion } from './manifest-version.mjs';
 
 const EXPECTED_CSP = "script-src 'self'; object-src 'self';";
-const EXPECTED_MATCHES = ['https://example.com/*'];
-const EXPECTED_PERMISSIONS = ['storage'];
+const EXPECTED_PERMISSIONS = ['activeTab', 'scripting', 'storage'];
 const EXPECTED_HOST_PERMISSIONS = [];
-const GLOB = /[*?[\]{}]/u;
-const CONCRETE_JS_ASSET = /^assets\/[^*?[\]{}]+\.js$/u;
 
 const extensionDirectory = fileURLToPath(
   new URL('../extension/', import.meta.url),
@@ -136,12 +133,25 @@ if (manifest.action?.default_icon !== undefined) {
 if (manifest.action?.default_popup !== undefined) {
   addReference(manifest.action.default_popup, 'action.default_popup');
 }
+report(
+  manifest.action?.default_popup === 'popup.html',
+  'action.default_popup must equal "popup.html".',
+);
 if (manifest.options_ui?.page !== undefined) {
   addReference(manifest.options_ui.page, 'options_ui.page');
 }
-if (manifest.background?.service_worker !== undefined) {
-  addReference(manifest.background.service_worker, 'background.service_worker');
-}
+report(
+  manifest.options_ui?.page === 'options.html',
+  'options_ui.page must equal "options.html".',
+);
+report(
+  manifest.options_ui?.open_in_tab === true,
+  'options_ui.open_in_tab must be true.',
+);
+report(
+  manifest.background === undefined,
+  'background must not be declared.',
+);
 
 report(
   Array.isArray(manifest.content_scripts ?? []),
@@ -150,25 +160,7 @@ report(
 const contentScripts = Array.isArray(manifest.content_scripts)
   ? manifest.content_scripts
   : [];
-contentScripts.forEach((entry, index) => {
-  if (!isRecord(entry)) {
-    errors.push(`content_scripts.${index} must be an object.`);
-    return;
-  }
-  expectSet(
-    entry.matches,
-    EXPECTED_MATCHES,
-    `content_scripts.${index}.matches`,
-  );
-  for (const field of ['js', 'css']) {
-    if (entry[field] === undefined) continue;
-    const paths =
-      readStrings(entry[field], `content_scripts.${index}.${field}`) ?? [];
-    paths.forEach((path, pathIndex) =>
-      addReference(path, `content_scripts.${index}.${field}.${pathIndex}`),
-    );
-  }
-});
+report(contentScripts.length === 0, 'content_scripts must be empty or absent.');
 
 report(
   Array.isArray(manifest.web_accessible_resources ?? []),
@@ -177,43 +169,10 @@ report(
 const webAccessibleResources = Array.isArray(manifest.web_accessible_resources)
   ? manifest.web_accessible_resources
   : [];
-webAccessibleResources.forEach((entry, index) => {
-  if (!isRecord(entry)) {
-    errors.push(`web_accessible_resources.${index} must be an object.`);
-    return;
-  }
-
-  expectSet(
-    entry.matches,
-    EXPECTED_MATCHES,
-    `web_accessible_resources.${index}.matches`,
-  );
-  expectSet(
-    entry.extension_ids,
-    [],
-    `web_accessible_resources.${index}.extension_ids`,
-  );
-  report(
-    typeof entry.use_dynamic_url === 'boolean',
-    `web_accessible_resources.${index}.use_dynamic_url must be explicit and boolean; received ${JSON.stringify(entry.use_dynamic_url)}.`,
-  );
-  const field = `web_accessible_resources.${index}.resources`;
-  const resources = readStrings(entry.resources, field) ?? [];
-  report(resources.length > 0, `${field} must not be empty.`);
-
-  resources.forEach((path, pathIndex) => {
-    const resourceField = `${field}.${pathIndex}`;
-    report(
-      !GLOB.test(path),
-      `${resourceField} must not contain a glob: ${path}`,
-    );
-    report(
-      CONCRETE_JS_ASSET.test(path),
-      `${resourceField} must expose only a concrete JS asset: ${path}`,
-    );
-    addReference(path, resourceField);
-  });
-});
+report(
+  webAccessibleResources.length === 0,
+  'web_accessible_resources must be empty or absent.',
+);
 
 const verifyReference = async ({ field, value }) => {
   const absolutePath = resolve(extensionDirectory, value);

@@ -17,7 +17,8 @@ export default defineManifest(({ command }) => ({
   ...manifestVersion,
   manifest_version: 3,
   name: EXTENSION_NAMES[command],
-  description: '',
+  description:
+    'Fill Japanese web forms with deterministic synthetic QA data without submitting them.',
   icons: {
     '16': `public/logo/icon16${createIconFileSuffix(command)}.png`,
     '48': `public/logo/icon48${createIconFileSuffix(command)}.png`,
@@ -28,6 +29,7 @@ export default defineManifest(({ command }) => ({
   },
   options_ui: {
     page: 'options.html',
+    open_in_tab: true,
   },
   ...(command === 'build'
     ? {
@@ -38,14 +40,5 @@ export default defineManifest(({ command }) => ({
     : {}),
   // Declare only permissions for Chrome APIs that the extension actually uses.
   // Keep the allowlists in scripts/verify-manifest.mjs in sync when adding one.
-  permissions: ['storage'],
-  content_scripts: [
-    {
-      matches: ['https://example.com/*'],
-      js: ['src/entrypoints/content/sample.tsx'],
-    },
-  ],
-  background: {
-    service_worker: 'src/entrypoints/background/background.ts',
-  },
+  permissions: ['activeTab', 'scripting', 'storage'],
 }));
