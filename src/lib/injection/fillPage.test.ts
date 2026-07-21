@@ -114,6 +114,11 @@ describe('fillPage', () => {
     '<input autocomplete="email" name="暗証番号">',
     '<label>認証コード<input autocomplete="tel"></label>',
     '<input autocomplete="name" placeholder="ｾｷｭﾘﾃｨｺｰﾄﾞ">',
+    '<label>Email verification code<input autocomplete="email"></label>',
+    '<input autocomplete="tel" aria-label="Authentication code">',
+    '<input autocomplete="name" placeholder="Security token">',
+    '<input autocomplete="email" aria-label="2FA code">',
+    '<input autocomplete="tel" aria-label="MFA code">',
   ])('機密項目を除外する: %s', (control) => {
     setBody(control);
 
