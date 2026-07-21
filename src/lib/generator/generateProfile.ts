@@ -19,6 +19,12 @@ const pick = <Value>(values: readonly Value[], random: () => number): Value =>
 const digits = (random: () => number, length: number): string =>
   Array.from({ length }, () => Math.floor(random() * 10)).join('');
 
+const unassignedMobileDigits = (random: () => number): string =>
+  `${UNASSIGNED_MOBILE_PREFIX}${digits(random, 7)}`;
+
+const formatMobileNumber = (value: string): string =>
+  `${value.slice(0, 3)}-${value.slice(3, 7)}-${value.slice(7)}`;
+
 const toFullWidthDigits = (value: string): string =>
   value.replace(/\d/gu, (digit) => FULL_WIDTH_DIGITS[Number(digit)]);
 
@@ -52,7 +58,7 @@ export const generateProfile = (
       familyNameKana,
       givenNameKana,
       email: `boundary.${discriminator}.long-local-part@example.com`,
-      tel: toFullWidthDigits(`${UNASSIGNED_MOBILE_PREFIX}${digits(random, 7)}`),
+      tel: toFullWidthDigits(unassignedMobileDigits(random)),
       postalCode: toFullWidthDigits(digits(random, 7)),
       prefecture: address.prefecture,
       locality: `${address.locality}境界値確認特別長域町`,
@@ -97,7 +103,7 @@ export const generateProfile = (
     familyNameKana: family.kana,
     givenNameKana: given.kana,
     email: `qa.${discriminator}@example.com`,
-    tel: `0${Math.floor(random() * 8) + 2}-${digits(random, 4)}-${digits(random, 4)}`,
+    tel: formatMobileNumber(unassignedMobileDigits(random)),
     postalCode: `${digits(random, 3)}-${digits(random, 4)}`,
     prefecture: address.prefecture,
     locality: address.locality,

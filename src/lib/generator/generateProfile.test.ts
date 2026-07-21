@@ -54,7 +54,7 @@ describe('generateProfile', () => {
     const profile = generateProfile('valid-format', 'valid');
 
     expect(profile.email).toMatch(/^[a-z0-9.]+@example\.com$/u);
-    expect(profile.tel).toMatch(/^0\d{1,3}-\d{2,4}-\d{4}$/u);
+    expect(profile.tel).toMatch(/^090-0\d{3}-\d{4}$/u);
     expect(profile.postalCode).toMatch(/^\d{3}-\d{4}$/u);
     expect(profile.organization).toMatch(/^株式会社テストデータ/u);
     expect(profile.fullNameKana).toMatch(/^[ァ-ヶー]+ [ァ-ヶー]+$/u);
