@@ -29,8 +29,8 @@ MV3 facts specific to this repo:
 - Controlled-form compatibility requires native value setters plus bubbling,
   composed `input` and `change` events. Host-page handlers can react by
   autosaving, submitting, or transmitting values. Keep that risk explicit in
-  the persistent safety notice, confirmation dialog, README, privacy policy,
-  store copy, and manual test plan.
+  the persistent safety notice, confirmation dialog, manifest description,
+  README, privacy policy, store copy, and manual test plan.
 - The extension itself must not click controls, call form submission APIs, or
   initiate external network requests.
 - Chrome APIs are typed via `@types/chrome`.

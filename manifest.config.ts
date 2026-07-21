@@ -1,6 +1,7 @@
 import { defineManifest } from '@crxjs/vite-plugin';
 import { version } from './package.json';
 import { createManifestVersion } from './scripts/manifest-version.mjs';
+import { MANIFEST_DESCRIPTION } from './scripts/product-metadata.mjs';
 
 const manifestVersion = createManifestVersion(version);
 const PRODUCT_NAME = 'JP QA Data Filler';
@@ -18,8 +19,7 @@ export default defineManifest(({ command }) => ({
   ...manifestVersion,
   manifest_version: 3,
   name: EXTENSION_NAMES[command],
-  description:
-    'Fill Japanese web forms with deterministic synthetic QA data without submitting them.',
+  description: MANIFEST_DESCRIPTION,
   icons: {
     '16': `public/logo/icon16${createIconFileSuffix(command)}.png`,
     '48': `public/logo/icon48${createIconFileSuffix(command)}.png`,

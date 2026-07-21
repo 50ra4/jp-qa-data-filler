@@ -3,6 +3,7 @@ import { isAbsolute, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { createManifestVersion } from './manifest-version.mjs';
+import { MANIFEST_DESCRIPTION } from './product-metadata.mjs';
 
 const EXPECTED_CSP = "script-src 'self'; object-src 'self';";
 const EXPECTED_PERMISSIONS = ['activeTab', 'scripting', 'storage'];
@@ -111,6 +112,10 @@ report(
   manifest.name === 'JP QA Data Filler',
   `name must equal "JP QA Data Filler"; received ${JSON.stringify(manifest.name)}.`,
 );
+report(
+  manifest.description === MANIFEST_DESCRIPTION,
+  `description must equal ${JSON.stringify(MANIFEST_DESCRIPTION)}; received ${JSON.stringify(manifest.description)}.`,
+);
 expectSet(manifest.permissions, EXPECTED_PERMISSIONS, 'permissions');
 expectSet(
   manifest.host_permissions,
@@ -152,10 +157,7 @@ report(
   manifest.options_ui?.open_in_tab === true,
   'options_ui.open_in_tab must be true.',
 );
-report(
-  manifest.background === undefined,
-  'background must not be declared.',
-);
+report(manifest.background === undefined, 'background must not be declared.');
 
 report(
   Array.isArray(manifest.content_scripts ?? []),
