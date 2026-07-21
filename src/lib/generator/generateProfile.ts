@@ -10,6 +10,8 @@ import { createPrng, hashSeed, normalizeSeed } from './prng';
 
 const DEFAULT_SEED = 'jpqa-001';
 const FULL_WIDTH_DIGITS = '０１２３４５６７８９';
+// Japan's national numbering plan leaves the 090-0 subscriber block unused.
+const UNASSIGNED_MOBILE_PREFIX = '0900';
 
 const pick = <Value>(values: readonly Value[], random: () => number): Value =>
   values[Math.floor(random() * values.length)];
@@ -50,7 +52,7 @@ export const generateProfile = (
       familyNameKana,
       givenNameKana,
       email: `boundary.${discriminator}.long-local-part@example.com`,
-      tel: toFullWidthDigits(`090${digits(random, 8)}`),
+      tel: toFullWidthDigits(`${UNASSIGNED_MOBILE_PREFIX}${digits(random, 7)}`),
       postalCode: toFullWidthDigits(digits(random, 7)),
       prefecture: address.prefecture,
       locality: `${address.locality}境界値確認特別長域町`,

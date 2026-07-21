@@ -41,9 +41,7 @@ describe('generateProfile', () => {
     const profile = generateProfile('coherent', 'valid');
 
     expect(FIELD_KINDS.every((kind) => profile[kind].length > 0)).toBe(true);
-    expect(profile.fullName).toBe(
-      `${profile.familyName} ${profile.givenName}`,
-    );
+    expect(profile.fullName).toBe(`${profile.familyName} ${profile.givenName}`);
     expect(profile.fullNameKana).toBe(
       `${profile.familyNameKana} ${profile.givenNameKana}`,
     );
@@ -68,6 +66,7 @@ describe('generateProfile', () => {
     expect(profile.fullName.length).toBeGreaterThan(12);
     expect(profile.organization.length).toBeGreaterThan(24);
     expect(profile.tel).toMatch(/^[０-９]+$/u);
+    expect(profile.tel.normalize('NFKC')).toMatch(/^0900\d{7}$/u);
     expect(profile.postalCode).toMatch(/^[０-９]{7}$/u);
     expect(profile.streetAddress.length).toBeGreaterThan(20);
   });
