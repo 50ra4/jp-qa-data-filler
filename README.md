@@ -35,7 +35,7 @@ See the [privacy policy](docs/privacy.md) for the complete data statement.
 - Native value setters plus bubbling, composed `input` and `change` events for controlled form implementations.
 - Top-frame and recursively open Shadow DOM support.
 - Bilingual Japanese/English popup and settings UI.
-- Detailed filled, skipped, unmatched, warning, and error results.
+- Exact filled, skipped-by-reason, and unmatched totals, plus bounded filled/warning audit details with field descriptors, confidence scores, errors, and omitted counts.
 
 ## Use
 
@@ -43,9 +43,9 @@ See the [privacy policy](docs/privacy.md) for the complete data statement.
 2. Open the extension popup.
 3. Choose a preset and seed, then review the generated preview.
 4. Select **Fill current form** and review the event-side-effect warning before confirming.
-5. Review the result in the popup and inspect the form. Submit manually only if appropriate for the test environment.
+5. Review the exact totals and bounded audit details in the popup, then inspect the form. Submit manually only if appropriate for the test environment.
 
-The `valid` preset validates string shapes only. Generated phone numbers, postal codes, and addresses are synthetic and are not guaranteed to be assigned, deliverable, or real.
+The `valid` preset validates string shapes only. Its seed-dependent phone value uses `000-0000-XXXX`: it resembles a Japanese number but its `000` prefix is structurally non-routable, so prefix-aware validators may reject it. The `boundary` preset uses longer seed-dependent full-width digits without hyphens, while `invalid` uses a short value. Generated phone numbers, postal codes, and addresses are synthetic and are not guaranteed to be assigned, deliverable, or real.
 
 ## Unsupported forms
 

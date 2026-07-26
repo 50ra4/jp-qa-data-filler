@@ -15,11 +15,13 @@ Run only against local fixtures or a dedicated QA environment. Do not use produc
 1. Open a normal local HTML form in the active tab.
 2. Click the extension action icon. Do not navigate directly to `popup.html` for this check.
 3. Verify the preview changes when preset or seed changes.
-4. Select **Fill current form** and confirm execution.
+4. Select **Fill current form**.
 5. Verify the confirmation explains that page scripts may autosave, submit, or transmit values in response to `input`/`change` events.
-6. Verify recognized name, Kana, email, phone, postal, address, and organization fields are filled.
-7. Verify the popup remains open and reports filled, skipped, unmatched, and warning counts.
-8. Repeat with the same seed and confirm the generated values are identical.
+6. Verify **Cancel** receives initial focus, the page behind the modal cannot be operated, and Escape closes the confirmation without filling.
+7. Open the confirmation again and confirm execution.
+8. Verify recognized name, Kana, email, phone, postal, address, and organization fields are filled.
+9. Verify the popup remains open and reports exact filled, skipped-by-reason, and unmatched totals plus warning details. Confirm filled audit entries show a field descriptor and confidence score.
+10. Repeat with the same seed and confirm the generated values are identical.
 
 ## Safety cases
 
@@ -29,6 +31,14 @@ Run only against local fixtures or a dedicated QA environment. Do not use produc
 - Add a page `input` handler with a local autosave counter and confirm it runs, proving why the popup warning is required. Do not connect this fixture to a network endpoint.
 - Confirm an ambiguous label such as `名前` remains unchanged and appears as ambiguous.
 - Confirm a prefecture select changes only when exactly one option text or value matches.
+- Confirm a recognized non-empty value targeting `maxlength="0"` stays empty, dispatches no `input`/`change` event, and appears under the empty-after-truncation skip reason.
+- On a fixture with more than 50 filled, skipped, and warning entries, confirm each audit list is capped independently, the exact totals remain correct, and the omitted count does not let one category hide another.
+
+## Phone presets
+
+- With `valid`, confirm the value matches `000-0000-XXXX`, varies with the seed, and may be rejected by validators that require an assignable prefix.
+- With `boundary`, confirm the value is a longer seed-dependent sequence of full-width digits without hyphens.
+- With `invalid`, confirm the value is deliberately too short.
 
 ## Compatibility cases
 

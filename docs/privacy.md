@@ -22,7 +22,7 @@ The extension stores only these user settings in `chrome.storage.local`:
 
 Generated profiles and fill results are kept only in memory while the popup is open. They are not written to extension storage.
 
-Generated phone values use the Japanese-shaped placeholder `000-0000-0000`. The `000` domestic prefix is structurally outside Japan's subscriber-number formats, so the value cannot identify a recipient. It may intentionally fail validators that check assignable prefixes rather than only length and punctuation.
+The `valid` preset generates a seed-dependent Japanese-shaped phone placeholder in the form `000-0000-XXXX`, where the final four digits vary with the seed. The `000` domestic prefix is structurally outside Japan's subscriber-number formats, so the value cannot identify a recipient and may intentionally fail prefix-aware validators. The `boundary` preset uses a longer seed-dependent sequence of full-width digits without hyphens, and `invalid` uses a deliberately short value.
 
 ## Permissions
 
