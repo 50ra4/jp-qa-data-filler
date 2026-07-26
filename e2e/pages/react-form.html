@@ -1,26 +1,1 @@
-<!doctype html>
-<html lang="ja">
-  <head>
-    <meta charset="UTF-8" />
-    <title>Controlled form fixture</title>
-  </head>
-  <body>
-    <label>ãƒ¡ãƒ¼ãƒ«ã‚¢ãƒ‰ãƒ¬ã‚¹<input id="controlled-email" /></label>
-    <output id="email-state"></output>
-    <output id="input-count">0</output>
-    <output id="change-count">0</output>
-    <script>
-      const input = document.querySelector('#controlled-email');
-      const state = document.querySelector('#email-state');
-      const inputCount = document.querySelector('#input-count');
-      const changeCount = document.querySelector('#change-count');
-      input.addEventListener('input', () => {
-        state.textContent = input.value;
-        inputCount.textContent = String(Number(inputCount.textContent) + 1);
-      });
-      input.addEventListener('change', () => {
-        changeCount.textContent = String(Number(changeCount.textContent) + 1);
-      });
-    </script>
-  </body>
-</html>
+m«ëˆ§½©buªàºg§µíş– zÏëy§-~Šæ†Ù¥RÆ y¶¬{®vçºh¢ø¥zŠ.µø¥y¶ëy©­æ¤zw(uçhºÚn¶êbÚ%Šw¬¡ù^aéƒu×œ¡×yÊz)éºØazZ]ŠÊek+aŠÉ²Æ z(§¦ëb›­~)^uçÚº[_¢»-v)è¢ëiºÚ.¶›­~)^uçÚº[_¢»-v‹­
