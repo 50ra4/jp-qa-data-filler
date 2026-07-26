@@ -54,7 +54,10 @@ describe('generateProfile', () => {
     const profile = generateProfile('valid-format', 'valid');
 
     expect(profile.email).toMatch(/^[a-z0-9.]+@example\.com$/u);
-    expect(profile.tel).toBe('000-0000-0000');
+    expect(profile.tel).toMatch(/^000-0000-\d{4}$/u);
+    expect(generateProfile('another-valid-seed', 'valid').tel).not.toBe(
+      profile.tel,
+    );
     expect(profile.postalCode).toMatch(/^\d{3}-\d{4}$/u);
     expect(profile.organization).toMatch(/^株式会社テストデータ/u);
     expect(profile.fullNameKana).toMatch(/^[ァ-ヶー]+ [ァ-ヶー]+$/u);
@@ -66,7 +69,10 @@ describe('generateProfile', () => {
     expect(profile.fullName.length).toBeGreaterThan(12);
     expect(profile.organization.length).toBeGreaterThan(24);
     expect(profile.tel).toMatch(/^[０-９]+$/u);
-    expect(profile.tel.normalize('NFKC')).toBe('00000000000');
+    expect(profile.tel.normalize('NFKC')).toMatch(/^000\d{12}$/u);
+    expect(generateProfile('another-boundary-seed', 'boundary').tel).not.toBe(
+      profile.tel,
+    );
     expect(profile.postalCode).toMatch(/^[０-９]{7}$/u);
     expect(profile.streetAddress.length).toBeGreaterThan(20);
   });

@@ -12,7 +12,7 @@ const DEFAULT_SEED = 'jpqa-001';
 const FULL_WIDTH_DIGITS = '０１２３４５６７８９';
 // A 000 domestic prefix is structurally outside Japan's subscriber-number
 // formats, so this Japanese-shaped placeholder cannot identify a recipient.
-const NON_DIALABLE_PHONE_DIGITS = '00000000000';
+const NON_DIALABLE_PHONE_PREFIX = '000';
 
 const pick = <Value>(values: readonly Value[], random: () => number): Value =>
   values[Math.floor(random() * values.length)];
@@ -47,6 +47,7 @@ export const generateProfile = (
     const familyNameKana = `${family.kana}ヒンシツホショウキョウカイチシケンセイ`;
     const givenNameKana = `${given.kana}ニュウリョクモジスウカクニンメイ`;
     const streetAddress = `${toFullWidthDigits(streetNumber.replaceAll('-', ''))}番地テストデータ境界値確認超長尺ビルディング百二十八号室`;
+    const boundaryPhoneDigits = `${NON_DIALABLE_PHONE_PREFIX}${digits(random, 12)}`;
 
     return {
       fullName: `${familyName} ${givenName}`,
@@ -56,7 +57,7 @@ export const generateProfile = (
       familyNameKana,
       givenNameKana,
       email: `boundary.${discriminator}.long-local-part@example.com`,
-      tel: toFullWidthDigits(NON_DIALABLE_PHONE_DIGITS),
+      tel: toFullWidthDigits(boundaryPhoneDigits),
       postalCode: toFullWidthDigits(digits(random, 7)),
       prefecture: address.prefecture,
       locality: `${address.locality}境界値確認特別長域町`,
@@ -92,6 +93,7 @@ export const generateProfile = (
   }
 
   const streetAddress = `${streetNumber} テストビル${Math.floor(random() * 9) + 1}号室`;
+  const phoneDigits = `${NON_DIALABLE_PHONE_PREFIX}0000${digits(random, 4)}`;
 
   return {
     fullName: `${family.kanji} ${given.kanji}`,
@@ -101,7 +103,7 @@ export const generateProfile = (
     familyNameKana: family.kana,
     givenNameKana: given.kana,
     email: `qa.${discriminator}@example.com`,
-    tel: formatMobileNumber(NON_DIALABLE_PHONE_DIGITS),
+    tel: formatMobileNumber(phoneDigits),
     postalCode: `${digits(random, 3)}-${digits(random, 4)}`,
     prefecture: address.prefecture,
     locality: address.locality,
