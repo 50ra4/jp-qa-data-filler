@@ -1,12 +1,1 @@
-import React, { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-
-import { OptionsRoot } from './OptionsRoot';
-import './options.css';
-
-// oxlint-disable-next-line typescript/no-non-null-assertion
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <OptionsRoot />
-  </StrictMode>,
-);
+m«ëˆ§½©buªàºg§¶ÊÜıéí¯*hŠ{lşŠmŠ‰ìşŠmŠ‰ì¶ÌT±¨m«ë€İ…¹îš(§~)^¢‹­~)^mºŞjFëy©ÊyÚ.¶›­º˜§¶‰bë(~W§‚Øgº`İuç(uç^r‡^Šzn¶^–—b²™ZÊØb²g¬±¨Š)éºØ§¦ë_ŠWyö®–×è®Ë]Šz(ºÚn¶‹­¦ë_ŠWyö®–×è®Ë]¢ë
