@@ -1,15 +1,23 @@
 import type { FieldKind } from '../generator/types';
 
-export type FillSkipReason =
-  | 'SENSITIVE_FIELD'
-  | 'UNSUPPORTED_CONTROL'
-  | 'DISABLED'
-  | 'READONLY'
-  | 'HIDDEN'
-  | 'AMBIGUOUS'
-  | 'NO_MATCHING_VALUE'
-  | 'VALUE_REJECTED'
-  | 'WRITE_FAILED';
+export const FILL_RESULT_LIMIT = 50;
+
+export const FILL_SKIP_REASONS = [
+  'SENSITIVE_FIELD',
+  'UNSUPPORTED_CONTROL',
+  'DISABLED',
+  'READONLY',
+  'HIDDEN',
+  'AMBIGUOUS',
+  'NO_MATCHING_VALUE',
+  'VALUE_REJECTED',
+  'EMPTY_AFTER_TRUNCATION',
+  'WRITE_FAILED',
+] as const;
+
+export type FillSkipReason = (typeof FILL_SKIP_REASONS)[number];
+
+export type FillSkipReasonCounts = Record<FillSkipReason, number>;
 
 export type FilledField = {
   fieldKind: FieldKind;
@@ -31,6 +39,7 @@ export type FillWarning = {
 export type FillPageResult = {
   filled: FilledField[];
   skipped: SkippedField[];
+  skippedReasonCounts: FillSkipReasonCounts;
   unmatchedCount: number;
   warnings: FillWarning[];
   omitted: {

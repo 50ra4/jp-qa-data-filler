@@ -1,16 +1,21 @@
 import type { FieldKind, FillerPreset, QaProfile } from '../generator/types';
 import { fillPage } from './fillPage';
-import type {
-  FillExecutionResult,
-  FillSkipReason,
-  FillWarning,
-  FilledField,
-  FillPageResult,
-  SkippedField,
+import {
+  FILL_RESULT_LIMIT,
+  FILL_SKIP_REASONS,
+  type FillExecutionResult,
+  type FillSkipReason,
+  type FillSkipReasonCounts,
+  type FillWarning,
+  type FilledField,
+  type FillPageResult,
+  type SkippedField,
 } from './types';
 
-const RESULT_LIMIT = 50;
-
+/*
+ * Keep this boundary strict: executeScript returns untrusted page-context data,
+ * even though fillPage normally creates it.
+ */
 const FIELD_KINDS: Readonly<Record<FieldKind, true>> = {
   fullName: true,
   familyName: true,
@@ -26,18 +31,6 @@ const FIELD_KINDS: Readonly<Record<FieldKind, true>> = {
   streetAddress: true,
   fullAddress: true,
   organization: true,
-};
-
-const SKIP_REASONS: Readonly<Record<FillSkipReason, true>> = {
-  SENSITIVE_FIELD: true,
-  UNSUPPORTED_CONTROL: true,
-  DISABLED: true,
-  READONLY: true,
-  HIDDEN: true,
-  AMBIGUOUS: true,
-  NO_MATCHING_VALUE: true,
-  VALUE_REJECTED: true,
-  WRITE_FAILED: true,
 };
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -64,7 +57,7 @@ const isSkippedField = (value: unknown): value is SkippedField =>
   typeof value.descriptor === 'string' &&
   value.descriptor.length <= 80 &&
   typeof value.reason === 'string' &&
-  hasOwn(SKIP_REASONS, value.reason);
+  FILL_SKIP_REASONS.includes(value.reason as FillSkipReason);
 
 const isFillWarning = (value: unknown): value is FillWarning =>
   isRecord(value) &&
@@ -80,6 +73,21 @@ const isOmittedCounts = (value: unknown): value is FillPageResult['omitted'] =>
     (key) => Number.isSafeInteger(value[key]) && (value[key] as number) >= 0,
   );
 
+const isSkippedReasonCounts = (
+  value: unknown,
+  expectedTotal: number,
+): value is FillSkipReasonCounts =>
+  isRecord(value) &&
+  Object.keys(value).length === FILL_SKIP_REASONS.length &&
+  FILL_SKIP_REASONS.every(
+    (reason) =>
+      Number.isSafeInteger(value[reason]) && (value[reason] as number) >= 0,
+  ) &&
+  FILL_SKIP_REASONS.reduce(
+    (total, reason) => total + (value[reason] as number),
+    0,
+  ) === expectedTotal;
+
 const isFillPageResult = (value: unknown): value is FillPageResult =>
   isRecord(value) &&
   Array.isArray(value.filled) &&
@@ -90,9 +98,14 @@ const isFillPageResult = (value: unknown): value is FillPageResult =>
   (value.unmatchedCount as number) >= 0 &&
   Array.isArray(value.warnings) &&
   value.warnings.every(isFillWarning) &&
-  value.filled.length + value.skipped.length + value.warnings.length <=
-    RESULT_LIMIT &&
-  isOmittedCounts(value.omitted);
+  value.filled.length <= FILL_RESULT_LIMIT &&
+  value.skipped.length <= FILL_RESULT_LIMIT &&
+  value.warnings.length <= FILL_RESULT_LIMIT &&
+  isOmittedCounts(value.omitted) &&
+  isSkippedReasonCounts(
+    value.skippedReasonCounts,
+    value.skipped.length + value.omitted.skipped,
+  );
 
 const errorMessage = (error: unknown, fallback: string): string => {
   const detail = error instanceof Error ? error.message : String(error);
@@ -156,7 +169,7 @@ export const executeFill = async (
     const results = await chrome.scripting.executeScript({
       target: { tabId: tab.id },
       func: fillPage,
-      args: [profile, preset],
+      args: [profile, preset, { resultLimit: FILL_RESULT_LIMIT }],
     });
     const topFrame = results.find((result) => result.frameId === 0);
     if (!topFrame || topFrame.result === undefined) {

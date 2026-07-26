@@ -7,12 +7,28 @@ import { executeFill } from './executeFill';
 import type { FillPageResult } from './types';
 
 const profile = generateProfile('execute-fill', 'valid');
+const emptySkipReasonCounts = (): FillPageResult['skippedReasonCounts'] => ({
+  SENSITIVE_FIELD: 0,
+  UNSUPPORTED_CONTROL: 0,
+  DISABLED: 0,
+  READONLY: 0,
+  HIDDEN: 0,
+  AMBIGUOUS: 0,
+  NO_MATCHING_VALUE: 0,
+  VALUE_REJECTED: 0,
+  EMPTY_AFTER_TRUNCATION: 0,
+  WRITE_FAILED: 0,
+});
 const pageResult: FillPageResult = {
   filled: [{ fieldKind: 'email', descriptor: 'email', confidence: 100 }],
   skipped: [{ descriptor: 'password', reason: 'SENSITIVE_FIELD' }],
   unmatchedCount: 1,
   warnings: [],
   omitted: { filled: 0, skipped: 0, warnings: 0 },
+  skippedReasonCounts: {
+    ...emptySkipReasonCounts(),
+    SENSITIVE_FIELD: 1,
+  },
 };
 
 afterEach(() => {
@@ -38,7 +54,7 @@ describe('executeFill', () => {
     expect(fake.chrome.scripting.executeScript).toHaveBeenCalledWith({
       target: { tabId: 42 },
       func: fillPage,
-      args: [profile, 'valid'],
+      args: [profile, 'valid', { resultLimit: 50 }],
     });
   });
 
@@ -128,6 +144,36 @@ describe('executeFill', () => {
     await expect(executeFill(profile, 'valid')).resolves.toMatchObject({
       ok: false,
       code: 'INVALID_RESULT',
+    });
+  });
+
+  test('各結果配列が個別上限内なら合計が上限を超えても受理する', async () => {
+    const filled = Array.from({ length: 50 }, () => pageResult.filled[0]);
+    const skipped = Array.from({ length: 50 }, () => pageResult.skipped[0]);
+    const warnings = Array.from({ length: 50 }, () => ({
+      code: 'TRUNCATED' as const,
+      descriptor: 'organization',
+      detail: 5,
+    }));
+    const largeResult: FillPageResult = {
+      filled,
+      skipped,
+      warnings,
+      unmatchedCount: 0,
+      omitted: { filled: 0, skipped: 0, warnings: 0 },
+      skippedReasonCounts: {
+        ...emptySkipReasonCounts(),
+        SENSITIVE_FIELD: 50,
+      },
+    };
+    installChromeFake({
+      activeTab: { id: 1, url: 'https://example.test' },
+      executeScriptResult: [{ frameId: 0, result: largeResult }],
+    });
+
+    await expect(executeFill(profile, 'valid')).resolves.toEqual({
+      ok: true,
+      page: largeResult,
     });
   });
 });

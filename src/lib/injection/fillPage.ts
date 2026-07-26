@@ -4,9 +4,8 @@ import type { FillPageResult } from './types';
 export const fillPage = (
   profile: QaProfile,
   preset: FillerPreset,
-  options: { skipLayoutCheck?: boolean } = {},
+  options: { resultLimit: number; skipLayoutCheck?: boolean },
 ): FillPageResult => {
-  const RESULT_LIMIT = 50;
   const autocompleteMap: Record<string, keyof QaProfile> = {
     name: 'fullName',
     'family-name': 'familyName',
@@ -312,6 +311,18 @@ export const fillPage = (
   const result: FillPageResult = {
     filled: [],
     skipped: [],
+    skippedReasonCounts: {
+      SENSITIVE_FIELD: 0,
+      UNSUPPORTED_CONTROL: 0,
+      DISABLED: 0,
+      READONLY: 0,
+      HIDDEN: 0,
+      AMBIGUOUS: 0,
+      NO_MATCHING_VALUE: 0,
+      VALUE_REJECTED: 0,
+      EMPTY_AFTER_TRUNCATION: 0,
+      WRITE_FAILED: 0,
+    },
     unmatchedCount: 0,
     warnings: [],
     omitted: {
@@ -320,7 +331,6 @@ export const fillPage = (
       warnings: 0,
     },
   };
-  let reportedCount = 0;
   const pushLimited = <
     Key extends 'filled' | 'skipped' | 'warnings',
     Value extends FillPageResult[Key][number],
@@ -329,12 +339,18 @@ export const fillPage = (
     value: Value,
   ) => {
     const values = result[key] as Value[];
-    if (reportedCount < RESULT_LIMIT) {
+    if (values.length < options.resultLimit) {
       values.push(value);
-      reportedCount += 1;
     } else {
       result.omitted[key] += 1;
     }
+  };
+  const skip = (
+    descriptor: string,
+    reason: keyof FillPageResult['skippedReasonCounts'],
+  ) => {
+    result.skippedReasonCounts[reason] += 1;
+    pushLimited('skipped', { descriptor, reason });
   };
   const roots: (Document | ShadowRoot)[] = [document];
   const visited = new Set<Document | ShadowRoot>();
@@ -357,14 +373,14 @@ export const fillPage = (
       const labels = labelTexts(control);
       const descriptor = descriptorFor(control, labels);
       if (isSensitive(control, labels)) {
-        pushLimited('skipped', { descriptor, reason: 'SENSITIVE_FIELD' });
+        skip(descriptor, 'SENSITIVE_FIELD');
         continue;
       }
       if (
         control.matches(':disabled') ||
         control.getAttribute('aria-disabled') === 'true'
       ) {
-        pushLimited('skipped', { descriptor, reason: 'DISABLED' });
+        skip(descriptor, 'DISABLED');
         continue;
       }
       if (
@@ -372,18 +388,18 @@ export const fillPage = (
           control instanceof HTMLTextAreaElement) &&
         control.readOnly
       ) {
-        pushLimited('skipped', { descriptor, reason: 'READONLY' });
+        skip(descriptor, 'READONLY');
         continue;
       }
       if (isHidden(control)) {
-        pushLimited('skipped', { descriptor, reason: 'HIDDEN' });
+        skip(descriptor, 'HIDDEN');
         continue;
       }
       if (
         control instanceof HTMLInputElement &&
         unsupportedInputTypes.has(control.type)
       ) {
-        pushLimited('skipped', { descriptor, reason: 'UNSUPPORTED_CONTROL' });
+        skip(descriptor, 'UNSUPPORTED_CONTROL');
         continue;
       }
       const classified = classify(control, labels);
@@ -392,14 +408,14 @@ export const fillPage = (
         continue;
       }
       if ('ambiguous' in classified) {
-        pushLimited('skipped', { descriptor, reason: 'AMBIGUOUS' });
+        skip(descriptor, 'AMBIGUOUS');
         continue;
       }
       if (
         control instanceof HTMLSelectElement &&
         classified.kind !== 'prefecture'
       ) {
-        pushLimited('skipped', { descriptor, reason: 'UNSUPPORTED_CONTROL' });
+        skip(descriptor, 'UNSUPPORTED_CONTROL');
         continue;
       }
       const sourceValue = profile[classified.kind];
@@ -412,19 +428,13 @@ export const fillPage = (
               normalizeOption(option.textContent ?? '') === expected,
           );
           if (matches.length !== 1) {
-            pushLimited('skipped', {
-              descriptor,
-              reason: 'NO_MATCHING_VALUE',
-            });
+            skip(descriptor, 'NO_MATCHING_VALUE');
             continue;
           }
           const value = matches[0].value;
           findValueSetter(control)(value);
           if (control.value !== value) {
-            pushLimited('skipped', {
-              descriptor,
-              reason: 'VALUE_REJECTED',
-            });
+            skip(descriptor, 'VALUE_REJECTED');
             continue;
           }
           dispatchValueEvents(control);
@@ -437,12 +447,13 @@ export const fillPage = (
           const value = shouldTruncate
             ? [...sourceValue].slice(0, maxLength).join('')
             : sourceValue;
+          if (sourceValue.length > 0 && value.length === 0) {
+            skip(descriptor, 'EMPTY_AFTER_TRUNCATION');
+            continue;
+          }
           findValueSetter(control)(value);
           if (control.value !== value) {
-            pushLimited('skipped', {
-              descriptor,
-              reason: 'VALUE_REJECTED',
-            });
+            skip(descriptor, 'VALUE_REJECTED');
             continue;
           }
           if (shouldTruncate) {
@@ -460,7 +471,7 @@ export const fillPage = (
           confidence: classified.confidence,
         });
       } catch {
-        pushLimited('skipped', { descriptor, reason: 'WRITE_FAILED' });
+        skip(descriptor, 'WRITE_FAILED');
       }
     }
   }

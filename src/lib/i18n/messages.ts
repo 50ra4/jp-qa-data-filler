@@ -67,6 +67,7 @@ const ENGLISH_MESSAGES = {
   reasonAmbiguous: 'Ambiguous field',
   reasonNoMatchingValue: 'No matching select option',
   reasonValueRejected: 'Value rejected by browser',
+  reasonEmptyAfterTruncation: 'Empty after maximum-length truncation',
   reasonWriteFailed: 'Write failed',
   countSuffix: '',
 } as const;
@@ -141,6 +142,7 @@ const JAPANESE_MESSAGES: Messages = {
   reasonAmbiguous: '判定が曖昧',
   reasonNoMatchingValue: 'selectの一致候補なし',
   reasonValueRejected: 'ブラウザが値を不受理',
+  reasonEmptyAfterTruncation: '最大文字数への短縮後に空',
   reasonWriteFailed: '値の書き込み失敗',
   countSuffix: '件',
 };

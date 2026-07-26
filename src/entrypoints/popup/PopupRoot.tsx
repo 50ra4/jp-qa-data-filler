@@ -7,9 +7,10 @@ import {
   type FillerPreset,
 } from '../../lib/generator/types';
 import { executeFill } from '../../lib/injection/executeFill';
-import type {
-  FillExecutionResult,
-  FillSkipReason,
+import {
+  FILL_SKIP_REASONS,
+  type FillExecutionResult,
+  type FillSkipReason,
 } from '../../lib/injection/types';
 import { getMessages, getPresetLabel } from '../../lib/i18n/messages';
 import { useStorageValue } from '../../lib/storage';
@@ -70,6 +71,7 @@ export const PopupRoot = ({
     AMBIGUOUS: messages.reasonAmbiguous,
     NO_MATCHING_VALUE: messages.reasonNoMatchingValue,
     VALUE_REJECTED: messages.reasonValueRejected,
+    EMPTY_AFTER_TRUNCATION: messages.reasonEmptyAfterTruncation,
     WRITE_FAILED: messages.reasonWriteFailed,
   };
 
@@ -97,15 +99,11 @@ export const PopupRoot = ({
     else void runFill();
   };
 
-  const reasonCounts = new Map<FillSkipReason, number>();
-  if (result?.ok) {
-    for (const skipped of result.page.skipped) {
-      reasonCounts.set(
-        skipped.reason,
-        (reasonCounts.get(skipped.reason) ?? 0) + 1,
-      );
-    }
-  }
+  const reportedReasons = result?.ok
+    ? FILL_SKIP_REASONS.filter(
+        (reason) => result.page.skippedReasonCounts[reason] > 0,
+      )
+    : [];
 
   return (
     <main className="jpqa-popup">
@@ -240,13 +238,14 @@ export const PopupRoot = ({
               </ul>
             </div>
           )}
-          {reasonCounts.size > 0 && (
+          {reportedReasons.length > 0 && (
             <div>
               <h3>{messages.skipReasonsTitle}</h3>
               <ul>
-                {[...reasonCounts].map(([reason, count]) => (
+                {reportedReasons.map((reason) => (
                   <li key={reason}>
-                    {reasonLabels[reason]}: {count}
+                    {reasonLabels[reason]}:{' '}
+                    {result.page.skippedReasonCounts[reason]}
                     {messages.countSuffix}
                   </li>
                 ))}

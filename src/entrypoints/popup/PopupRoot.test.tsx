@@ -14,6 +14,19 @@ import { setStorageValue } from '../../lib/storage';
 import { installChromeFake } from '../../lib/testing/chromeFake';
 import { PopupRoot } from './PopupRoot';
 
+const emptySkipReasonCounts = () => ({
+  SENSITIVE_FIELD: 0,
+  UNSUPPORTED_CONTROL: 0,
+  DISABLED: 0,
+  READONLY: 0,
+  HIDDEN: 0,
+  AMBIGUOUS: 0,
+  NO_MATCHING_VALUE: 0,
+  VALUE_REJECTED: 0,
+  EMPTY_AFTER_TRUNCATION: 0,
+  WRITE_FAILED: 0,
+});
+
 beforeEach(() => {
   installChromeFake();
 });
@@ -75,6 +88,7 @@ describe('PopupRoot', () => {
         unmatchedCount: 0,
         warnings: [],
         omitted: { filled: 0, skipped: 0, warnings: 0 },
+        skippedReasonCounts: emptySkipReasonCounts(),
       },
     }));
     render(<PopupRoot language="ja" onExecute={onExecute} />);
@@ -125,6 +139,7 @@ describe('PopupRoot', () => {
         unmatchedCount: 0,
         warnings: [],
         omitted: { filled: 0, skipped: 0, warnings: 0 },
+        skippedReasonCounts: emptySkipReasonCounts(),
       },
     });
     await waitFor(() => expect(button).not.toBeDisabled());
@@ -156,7 +171,12 @@ describe('PopupRoot', () => {
         ],
         unmatchedCount: 3,
         warnings: [{ code: 'TRUNCATED', descriptor: '会社名', detail: 5 }],
-        omitted: { filled: 1, skipped: 0, warnings: 0 },
+        omitted: { filled: 1, skipped: 58, warnings: 0 },
+        skippedReasonCounts: {
+          ...emptySkipReasonCounts(),
+          SENSITIVE_FIELD: 30,
+          DISABLED: 30,
+        },
       },
     }));
     render(<PopupRoot language="ja" onExecute={onExecute} />);
@@ -169,13 +189,13 @@ describe('PopupRoot', () => {
     );
 
     expect(await screen.findByText('入力: 3件')).toBeInTheDocument();
-    expect(screen.getByText('スキップ: 2件')).toBeInTheDocument();
+    expect(screen.getByText('スキップ: 60件')).toBeInTheDocument();
     expect(screen.getByText('判定不能: 3件')).toBeInTheDocument();
-    expect(screen.getByText(/機密項目: 1件/u)).toBeInTheDocument();
-    expect(screen.getByText(/無効な項目: 1件/u)).toBeInTheDocument();
+    expect(screen.getByText(/機密項目: 30件/u)).toBeInTheDocument();
+    expect(screen.getByText(/無効な項目: 30件/u)).toBeInTheDocument();
     expect(screen.getByText('メール（確度 80%）')).toBeInTheDocument();
     expect(screen.getByText('会社名：最大5文字に短縮')).toBeInTheDocument();
-    expect(screen.getByText('ほか1件を省略')).toBeInTheDocument();
+    expect(screen.getByText('ほか59件を省略')).toBeInTheDocument();
   });
 
   test('注入エラーをcodeと案内付きで表示する', async () => {

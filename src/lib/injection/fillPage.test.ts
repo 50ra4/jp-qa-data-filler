@@ -2,8 +2,13 @@ import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 
 import { generateProfile } from '../generator/generateProfile';
 import { fillPage } from './fillPage';
+import { FILL_RESULT_LIMIT } from './types';
 
 const profile = generateProfile('fill-page', 'valid');
+const runFillPage = (
+  preset: Parameters<typeof fillPage>[1],
+  options: Omit<Parameters<typeof fillPage>[2], 'resultLimit'> = {},
+) => fillPage(profile, preset, { ...options, resultLimit: FILL_RESULT_LIMIT });
 
 const setBody = (html: string) => {
   document.body.innerHTML = html;
@@ -45,7 +50,7 @@ describe('fillPage', () => {
         .join('')}</form>`,
     );
 
-    const result = fillPage(profile, 'valid');
+    const result = runFillPage('valid');
 
     expect(result.filled).toHaveLength(mappings.length);
     for (const [, kind] of mappings) {
@@ -86,7 +91,7 @@ describe('fillPage', () => {
         .join('')}</form>`,
     );
 
-    const result = fillPage(profile, 'valid');
+    const result = runFillPage('valid');
 
     expect(result.filled.map(({ fieldKind }) => fieldKind).toSorted()).toEqual(
       labels.map(([, kind]) => kind).toSorted(),
@@ -96,7 +101,7 @@ describe('fillPage', () => {
   test('曖昧な「名前」は入力しない', () => {
     setBody('<label>名前<input value="original"></label>');
 
-    const result = fillPage(profile, 'valid');
+    const result = runFillPage('valid');
 
     expect(document.querySelector('input')?.value).toBe('original');
     expect(result.skipped).toContainEqual(
@@ -125,7 +130,7 @@ describe('fillPage', () => {
   ])('機密項目を除外する: %s', (control) => {
     setBody(control);
 
-    const result = fillPage(profile, 'invalid');
+    const result = runFillPage('invalid');
 
     expect(document.querySelector<HTMLInputElement>('input')?.value).toBe('');
     expect(result.skipped[0]?.reason).toBe('SENSITIVE_FIELD');
@@ -152,7 +157,7 @@ describe('fillPage', () => {
   ])('操作不能な項目を除外する: %s', (control, reason) => {
     setBody(control);
 
-    const result = fillPage(profile, 'valid');
+    const result = runFillPage('valid');
 
     expect(result.skipped[0]?.reason).toBe(reason);
   });
@@ -169,7 +174,7 @@ describe('fillPage', () => {
     input?.addEventListener('input', inputEvent);
     input?.addEventListener('change', changeEvent);
 
-    const result = fillPage(profile, 'valid');
+    const result = runFillPage('valid');
 
     expect(input?.value).toBe('');
     expect(inputEvent).not.toHaveBeenCalled();
@@ -186,7 +191,7 @@ describe('fillPage', () => {
       </fieldset>
     `);
 
-    const result = fillPage(profile, 'valid');
+    const result = runFillPage('valid');
 
     expect(document.querySelector<HTMLInputElement>('input')?.value).toBe(
       profile.email,
@@ -218,7 +223,7 @@ describe('fillPage', () => {
     );
     form?.addEventListener('submit', submit);
 
-    fillPage(profile, 'valid');
+    runFillPage('valid');
 
     expect(input?.value).toBe(profile.email);
     expect(textarea?.value).toBe(profile.fullAddress);
@@ -243,7 +248,7 @@ describe('fillPage', () => {
       </label>
     `);
 
-    const result = fillPage(profile, 'valid');
+    const result = runFillPage('valid');
 
     expect(document.querySelector('select')?.value).toBe(profile.prefecture);
     expect(
@@ -264,7 +269,7 @@ describe('fillPage', () => {
     firstRoot.append(nestedHost);
     document.body.append(host);
 
-    const result = fillPage(profile, 'valid');
+    const result = runFillPage('valid');
 
     expect(secondRoot.querySelector('input')?.value).toBe(profile.email);
     expect(result.filled).toHaveLength(1);
@@ -273,7 +278,7 @@ describe('fillPage', () => {
   test('validとboundaryはmaxLengthへcode point単位で丸めて警告する', () => {
     setBody('<label>会社名<input maxlength="5"></label>');
 
-    const result = fillPage(profile, 'valid');
+    const result = runFillPage('valid');
     const value =
       document.querySelector<HTMLInputElement>('input')?.value ?? '';
 
@@ -287,19 +292,24 @@ describe('fillPage', () => {
     ]);
   });
 
-  test('maxlength=0は空文字へ丸める', () => {
-    setBody('<label>会社名<input maxlength="0" value="original"></label>');
+  test('maxlength=0は値もeventも書き込まずskipする', () => {
+    setBody('<label>会社名<input maxlength="0"></label>');
+    const input = document.querySelector<HTMLInputElement>('input');
+    const inputEvent = vi.fn();
+    const changeEvent = vi.fn();
+    input?.addEventListener('input', inputEvent);
+    input?.addEventListener('change', changeEvent);
 
-    const result = fillPage(profile, 'valid');
+    const result = runFillPage('valid');
 
-    expect(document.querySelector<HTMLInputElement>('input')?.value).toBe('');
-    expect(result.warnings).toEqual([
-      {
-        code: 'TRUNCATED',
-        descriptor: '会社名',
-        detail: 0,
-      },
-    ]);
+    expect(input?.value).toBe('');
+    expect(result.filled).toHaveLength(0);
+    expect(result.warnings).toHaveLength(0);
+    expect(result.skipped).toContainEqual(
+      expect.objectContaining({ reason: 'EMPTY_AFTER_TRUNCATION' }),
+    );
+    expect(inputEvent).not.toHaveBeenCalled();
+    expect(changeEvent).not.toHaveBeenCalled();
   });
 
   test('ブラウザが値を受理しない場合はfilledへ数えずeventも送らない', () => {
@@ -313,7 +323,7 @@ describe('fillPage', () => {
       },
     );
 
-    const result = fillPage(profile, 'valid');
+    const result = runFillPage('valid');
 
     expect(result.filled).toHaveLength(0);
     expect(result.skipped).toContainEqual(
@@ -328,7 +338,7 @@ describe('fillPage', () => {
       length: 0,
     } as DOMRectList);
 
-    const result = fillPage(profile, 'valid');
+    const result = runFillPage('valid');
 
     expect(result.skipped[0]?.reason).toBe('HIDDEN');
   });
@@ -339,7 +349,7 @@ describe('fillPage', () => {
       length: 0,
     } as DOMRectList);
 
-    const result = fillPage(profile, 'valid', { skipLayoutCheck: true });
+    const result = runFillPage('valid', { skipLayoutCheck: true });
 
     expect(result.filled).toHaveLength(1);
   });
@@ -352,7 +362,7 @@ describe('fillPage', () => {
       ).join(''),
     );
 
-    const result = fillPage(profile, 'valid');
+    const result = runFillPage('valid');
 
     expect(result.filled).toHaveLength(50);
     expect(result.omitted).toEqual({
@@ -362,10 +372,36 @@ describe('fillPage', () => {
     });
   });
 
+  test('skippedが上限を超えてもfilledを配列別に記録する', () => {
+    setBody(
+      [
+        ...Array.from(
+          { length: 55 },
+          (_, index) => `<input type="hidden" aria-label="hidden-${index}">`,
+        ),
+        '<input autocomplete="name">',
+        '<input autocomplete="email">',
+        '<input autocomplete="tel">',
+        '<input autocomplete="organization">',
+      ].join(''),
+    );
+
+    const result = runFillPage('valid');
+
+    expect(result.skipped).toHaveLength(50);
+    expect(result.filled).toHaveLength(4);
+    expect(result.omitted).toEqual({
+      filled: 0,
+      skipped: 5,
+      warnings: 0,
+    });
+    expect(result.skippedReasonCounts.HIDDEN).toBe(55);
+  });
+
   test('結果へ入力値やHTMLを含めない', () => {
     setBody('<label>メールアドレス<input id="mail"></label>');
 
-    const result = fillPage(profile, 'valid');
+    const result = runFillPage('valid');
     const serialized = JSON.stringify(result);
 
     expect(serialized).not.toContain(profile.email);
@@ -379,7 +415,9 @@ describe('fillPage', () => {
       `return (${fillPage.toString()})`,
     )() as typeof fillPage;
 
-    const result = isolatedFillPage(profile, 'valid');
+    const result = isolatedFillPage(profile, 'valid', {
+      resultLimit: FILL_RESULT_LIMIT,
+    });
 
     expect(document.querySelector('input')?.value).toBe(profile.email);
     expect(result.filled).toHaveLength(1);
