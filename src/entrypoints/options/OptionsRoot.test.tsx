@@ -1,1 +1,65 @@
-m«ëˆ§½©buªàºg§¶ÊÜıéí¯*hŠ{lşŠmŠ‰ìüêmŠ‰ìFŠ-µë-¶ÌT±¨m«ë€İ…¹îš(§~)^¢‹­~)^mºŞjFëy©ÊyÚ.¶›­º˜§¶‰bë(~W§‚Øgº`İuç(uç^r‡^Šzn¶^–—b²™ZÊØb²g¬±¨Š)éºØ§¦ë_ŠWyö®–×è®Ë]Šz(ºÚn¶‹­¦ë_ŠWyö®–×è®Ë]¢ë
+import '@testing-library/jest-dom/vitest';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
+
+import { getStorageValue } from '../../lib/storage';
+import { installChromeFake } from '../../lib/testing/chromeFake';
+import { OptionsRoot } from './OptionsRoot';
+
+beforeEach(() => {
+  installChromeFake();
+});
+
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+  vi.restoreAllMocks();
+});
+
+describe('OptionsRoot', () => {
+  test('æ—¢å®šè¨­å®šã¨è¨€èªè¡¨ç¤ºã‚’è¡¨ç¤ºã™ã‚‹', async () => {
+    render(<OptionsRoot language="ja-JP" />);
+
+    expect(
+      screen.getByRole('heading', { name: 'JP QA Data Filler è¨­å®š' }),
+    ).toBeInTheDocument();
+    expect(screen.getByLabelText('æ—¢å®šãƒ—ãƒªã‚»ãƒƒãƒˆ')).toHaveValue('valid');
+    await waitFor(() =>
+      expect(screen.getByLabelText('æ—¢å®šseed')).toHaveValue('jpqa-001'),
+    );
+    expect(screen.getByText('è¡¨ç¤ºè¨€èª: æ—¥æœ¬èª')).toBeInTheDocument();
+  });
+
+  test('å¤‰æ›´ã—ãŸè¨­å®šã‚’storage.localã¸ä¿å­˜ã™ã‚‹', async () => {
+    render(<OptionsRoot language="ja" />);
+
+    await waitFor(() =>
+      expect(screen.getByLabelText('æ—¢å®šseed')).toHaveValue('jpqa-001'),
+    );
+    fireEvent.change(screen.getByLabelText('æ—¢å®šãƒ—ãƒªã‚»ãƒƒãƒˆ'), {
+      target: { value: 'boundary' },
+    });
+    fireEvent.change(screen.getByLabelText('æ—¢å®šseed'), {
+      target: { value: ` ${'ã‚'.repeat(70)} ` },
+    });
+    fireEvent.click(screen.getByLabelText('å®Ÿè¡Œå‰ã«ç¢ºèªã™ã‚‹'));
+    fireEvent.click(screen.getByRole('button', { name: 'è¨­å®šã‚’ä¿å­˜' }));
+
+    await waitFor(async () => {
+      await expect(getStorageValue('fillerSettings')).resolves.toEqual({
+        defaultPreset: 'boundary',
+        defaultSeed: 'ã‚'.repeat(64),
+        requireConfirmation: false,
+      });
+    });
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent('ä¿å­˜ã—ã¾ã—ãŸ'),
+    );
+  });
+});

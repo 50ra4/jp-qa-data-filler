@@ -1,1 +1,91 @@
-m«ëˆ§½©buªàºg§µížýÖ­iø¥•êì¥ç-±KæÚ±î¸Ø[žé¢Šwâ•ê(º×â•æÛ­æ¤n·š‘éÜ¡×¢ëiºÛ©Š{h–)Þ²‡åzx-†{¦×^r‡^uç(uè§¦ëa…éiv+)•¬­†+&zËè¢ž›­Šznµø¥y×Ÿjém~ŠìµØ§¢‹­¦ëhºÚnµø¥y×Ÿjém~ŠìµÚ.
+import { expect, test } from './fixtures';
+
+const popupUrl = (extensionId: string): string =>
+  `chrome-extension://${extensionId}/popup.html`;
+
+test('standard formã¸å…¥åŠ›ã—ã€æ©Ÿå¯†é …ç›®ã¨submitã‚’å®‰å…¨ã«é™¤å¤–ã™ã‚‹', async ({
+  extensionId,
+  extensionPage,
+  testPage,
+  testServerOrigin,
+}) => {
+  await testPage.goto(`${testServerOrigin}/standard-form.html`);
+  await extensionPage.goto(popupUrl(extensionId));
+  await testPage.bringToFront();
+
+  await extensionPage.getByLabel('Seed').fill('e2e-repeatable');
+  await extensionPage
+    .getByRole('button', { name: 'Fill current form' })
+    .click();
+  await extensionPage.getByRole('button', { name: 'Fill form' }).click();
+
+  await expect(extensionPage.getByText('Filled: 14')).toBeVisible();
+  await expect(extensionPage.getByText(/Skipped: [1-9]/u)).toBeVisible();
+  await expect(testPage.locator('[autocomplete="name"]')).not.toHaveValue('');
+  await expect(testPage.locator('#email')).toHaveValue(/@example\.com$/u);
+  await expect(
+    testPage.locator('[autocomplete="current-password"]'),
+  ).toHaveValue('');
+  await expect(testPage.locator('[autocomplete="one-time-code"]')).toHaveValue(
+    '',
+  );
+  await expect(testPage.locator('[autocomplete="cc-number"]')).toHaveValue('');
+  await expect(testPage.locator('[data-sensitive-japanese]')).toHaveValue('');
+  await expect(testPage.locator('[data-sensitive-hidden]')).toHaveValue('');
+  await expect(testPage.locator('[data-explicit-disabled]')).toHaveValue('');
+  await expect(testPage.locator('[data-fieldset-disabled]')).toHaveValue('');
+  await expect(testPage.locator('[readonly]')).toHaveValue('');
+  await expect(testPage.locator('#submit-count')).toHaveText('0');
+
+  const firstEmail = await testPage.locator('#email').inputValue();
+  await extensionPage
+    .getByRole('button', { name: 'Fill current form' })
+    .click();
+  await extensionPage.getByRole('button', { name: 'Fill form' }).click();
+  await expect(testPage.locator('#email')).toHaveValue(firstEmail);
+});
+
+test('frameworkåž‹inputã§input/change eventã‚’åæ˜ ã™ã‚‹', async ({
+  extensionId,
+  extensionPage,
+  testPage,
+  testServerOrigin,
+}) => {
+  await testPage.goto(`${testServerOrigin}/react-form.html`);
+  await extensionPage.goto(popupUrl(extensionId));
+  await testPage.bringToFront();
+
+  await extensionPage
+    .getByRole('button', { name: 'Fill current form' })
+    .click();
+  await extensionPage.getByRole('button', { name: 'Fill form' }).click();
+
+  await expect(testPage.locator('#email-state')).toHaveText(/@example\.com$/u);
+  await expect(testPage.locator('#controlled-email')).toHaveAttribute(
+    'data-controlled-update',
+    'true',
+  );
+  await expect(testPage.locator('#input-count')).toHaveText('1');
+  await expect(testPage.locator('#change-count')).toHaveText('1');
+});
+
+test('open Shadow DOMå†…ã®é …ç›®ã¸å…¥åŠ›ã™ã‚‹', async ({
+  extensionId,
+  extensionPage,
+  testPage,
+  testServerOrigin,
+}) => {
+  await testPage.goto(`${testServerOrigin}/shadow-form.html`);
+  await extensionPage.goto(popupUrl(extensionId));
+  await testPage.bringToFront();
+
+  await extensionPage
+    .getByRole('button', { name: 'Fill current form' })
+    .click();
+  await extensionPage.getByRole('button', { name: 'Fill form' }).click();
+
+  await expect(testPage.locator('#open-host').locator('input')).toHaveValue(
+    /@example\.com$/u,
+  );
+  await expect(testPage.locator('#closed-value')).toHaveText('untouched');
+});

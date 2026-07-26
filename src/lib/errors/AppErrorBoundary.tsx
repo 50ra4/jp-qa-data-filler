@@ -1,1 +1,41 @@
-m«ëˆ§½©buªàºg§¶ÊÜşX›ıêë¢»?šD®º+‹§uªò¶ÌT±¨m«ë€İ…¹îš(§~)^¢‹­~)^mºŞjFëy©ÊyÚ.¶›­º˜§¶‰bë(~W§‚Øgº`İuç(uç^r‡^Šzn¶^–—b²™ZÊØb²g¬±¨Š)éºØ§¦ë_ŠWyö®–×è®Ë]Šz(ºÚn¶‹­¦ë_ŠWyö®–×è®Ë]¢ë
+import { Component, type ErrorInfo, type ReactNode } from 'react';
+
+type ErrorBoundaryProps = {
+  children: ReactNode;
+  fallback: string;
+};
+
+type ErrorBoundaryState = {
+  failed: boolean;
+};
+
+class ErrorBoundaryImplementation extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
+> {
+  state: ErrorBoundaryState = { failed: false };
+
+  static getDerivedStateFromError(): ErrorBoundaryState {
+    return { failed: true };
+  }
+
+  componentDidCatch(error: Error, errorInfo: ErrorInfo): void {
+    console.error('Extension UI render failed.', error, errorInfo);
+  }
+
+  render(): ReactNode {
+    if (this.state.failed) {
+      return <p role="alert">{this.props.fallback}</p>;
+    }
+    return this.props.children;
+  }
+}
+
+export const AppErrorBoundary = ({
+  children,
+  fallback,
+}: ErrorBoundaryProps) => (
+  <ErrorBoundaryImplementation fallback={fallback}>
+    {children}
+  </ErrorBoundaryImplementation>
+);

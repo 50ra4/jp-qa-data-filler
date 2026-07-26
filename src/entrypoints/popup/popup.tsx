@@ -1,1 +1,18 @@
-m«ëˆ§½©buªàºg§¶ÊÜıéí¯*hŠ{lşš)ºŸé¢›©¶ÌT±¨m«ë€İ…¹îš(§~)^¢‹­~)^mºŞjFëy©ÊyÚ.¶›­º˜§¶‰bë(~W§‚Øgº`İuç(uç^r‡^Šzn¶^–—b²™ZÊØb²g¬±¨Š)éºØ§¦ë_ŠWyö®–×è®Ë]Šz(ºÚn¶‹­¦ë_ŠWyö®–×è®Ë]¢ë
+import React, { StrictMode } from 'react';
+import { createRoot } from 'react-dom/client';
+
+import { AppErrorBoundary } from '../../lib/errors/AppErrorBoundary';
+import { getMessages } from '../../lib/i18n/messages';
+import { PopupRoot } from './PopupRoot';
+import './popup.css';
+
+const messages = getMessages(navigator.language);
+
+// oxlint-disable-next-line typescript/no-non-null-assertion
+createRoot(document.getElementById('root')!).render(
+  <StrictMode>
+    <AppErrorBoundary fallback={messages.unexpectedUiError}>
+      <PopupRoot />
+    </AppErrorBoundary>
+  </StrictMode>,
+);

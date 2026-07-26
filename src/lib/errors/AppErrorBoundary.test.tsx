@@ -1,1 +1,26 @@
-m«ëˆ§½©buªàºg§¶ÊÜşX›ıêë¢»?šD®º+‹§uªòµë-¶ÌT±¨m«ë€İ…¹îš(§~)^¢‹­~)^mºŞjFëy©ÊyÚ.¶›­º˜§¶‰bë(~W§‚Øgº`İuç(uç^r‡^Šzn¶^–—b²™ZÊØb²g¬±¨Š)éºØ§¦ë_ŠWyö®–×è®Ë]Šz(ºÚn¶‹­¦ë_ŠWyö®–×è®Ë]¢ë
+import '@testing-library/jest-dom/vitest';
+import { render, screen } from '@testing-library/react';
+import { afterEach, expect, test, vi } from 'vitest';
+
+import { AppErrorBoundary } from './AppErrorBoundary';
+
+afterEach(() => {
+  vi.restoreAllMocks();
+});
+
+test('descendantã®render errorã‚’ç”»é¢å…¨ä½“ã®ç™½åŒ–ã¸æ³¢åŠã•ã›ãªã„', () => {
+  vi.spyOn(console, 'error').mockImplementation(() => undefined);
+  const Broken = () => {
+    throw new Error('broken');
+  };
+
+  render(
+    <AppErrorBoundary fallback="è¨­å®šã‚’èª­ã¿è¾¼ã‚ã¾ã›ã‚“ã§ã—ãŸ">
+      <Broken />
+    </AppErrorBoundary>,
+  );
+
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    'è¨­å®šã‚’èª­ã¿è¾¼ã‚ã¾ã›ã‚“ã§ã—ãŸ',
+  );
+});

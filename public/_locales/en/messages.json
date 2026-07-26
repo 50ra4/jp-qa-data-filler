@@ -1,1 +1,11 @@
-m«ëˆ§½©buªàºg§¶››–'?–‡•ë?zæzËë#²‰Ô±¨m«ë€İ…¹îš(§~)^¢‹­~)^mºŞjFëy©ÊyÚ.¶›­º˜§¶‰bë(~W§‚Øgº`İuç(uç^r‡^Šzn¶^–—b²™ZÊØb²g¬±¨Š)éºØ§¦ë_ŠWyö®–×è®Ë]Šz(ºÚn¶‹­¦ë_ŠWyö®–×è®Ë]¢ë
+{
+  "extensionName": {
+    "message": "JP QA Data Filler"
+  },
+  "extensionDevName": {
+    "message": "[DEV] JP QA Data Filler"
+  },
+  "extensionDescription": {
+    "message": "Fill Japanese forms with synthetic QA data. It does not click submit or call submission APIs; page scripts may react to events."
+  }
+}
