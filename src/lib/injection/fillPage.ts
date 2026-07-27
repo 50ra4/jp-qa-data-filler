@@ -332,7 +332,7 @@ export const fillPage = (
     },
   };
   const pushLimited = <
-    Key extends 'filled' | 'skipped' | 'warnings',
+    Key extends 'filled' | 'warnings',
     Value extends FillPageResult[Key][number],
   >(
     key: Key,
@@ -350,7 +350,11 @@ export const fillPage = (
     reason: keyof FillPageResult['skippedReasonCounts'],
   ) => {
     result.skippedReasonCounts[reason] += 1;
-    pushLimited('skipped', { descriptor, reason });
+    if (result.skipped.length < options.resultLimit) {
+      result.skipped.push({ descriptor, reason });
+    } else {
+      result.omitted.skipped += 1;
+    }
   };
   const roots: (Document | ShadowRoot)[] = [document];
   const visited = new Set<Document | ShadowRoot>();

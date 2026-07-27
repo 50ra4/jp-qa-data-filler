@@ -13,6 +13,7 @@ const FULL_WIDTH_DIGITS = '０１２３４５６７８９';
 // A 000 domestic prefix is structurally outside Japan's subscriber-number
 // formats, so this Japanese-shaped placeholder cannot identify a recipient.
 const NON_DIALABLE_PHONE_PREFIX = '000';
+const VALID_PHONE_MIDDLE_DIGITS = '0000';
 
 const pick = <Value>(values: readonly Value[], random: () => number): Value =>
   values[Math.floor(random() * values.length)];
@@ -93,7 +94,7 @@ export const generateProfile = (
   }
 
   const streetAddress = `${streetNumber} テストビル${Math.floor(random() * 9) + 1}号室`;
-  const phoneDigits = `${NON_DIALABLE_PHONE_PREFIX}0000${digits(random, 4)}`;
+  const phoneDigits = `${NON_DIALABLE_PHONE_PREFIX}${VALID_PHONE_MIDDLE_DIGITS}${digits(random, 4)}`;
 
   return {
     fullName: `${family.kanji} ${given.kanji}`,
