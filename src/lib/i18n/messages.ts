@@ -55,7 +55,9 @@ const ENGLISH_MESSAGES = {
   filledFieldFormat: '{descriptor} ({label} {confidence}%)',
   warningTruncated:
     '{descriptor}: truncated to a maximum of {count} characters',
-  omittedResults: '{count} more omitted',
+  omittedFilledResults: '{count} additional filled entries omitted',
+  omittedSkippedResults: '{count} additional skipped entries omitted',
+  omittedWarningResults: '{count} additional warnings omitted',
   errorTitle: 'Could not fill the form',
   unexpectedUiError:
     'The extension interface could not be displayed. Reopen it and try again.',
@@ -130,7 +132,9 @@ const JAPANESE_MESSAGES: Messages = {
   confidenceLabel: '確度',
   filledFieldFormat: '{descriptor}（{label} {confidence}%）',
   warningTruncated: '{descriptor}：最大{count}文字に短縮',
-  omittedResults: 'ほか{count}件を省略',
+  omittedFilledResults: '入力項目をほか{count}件省略',
+  omittedSkippedResults: 'スキップ項目をほか{count}件省略',
+  omittedWarningResults: '警告をほか{count}件省略',
   errorTitle: 'フォームへ入力できませんでした',
   unexpectedUiError:
     '拡張機能の画面を表示できませんでした。開き直して再実行してください。',

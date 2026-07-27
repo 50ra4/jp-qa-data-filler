@@ -171,7 +171,7 @@ describe('PopupRoot', () => {
         ],
         unmatchedCount: 3,
         warnings: [{ code: 'TRUNCATED', descriptor: '会社名', detail: 5 }],
-        omitted: { filled: 1, skipped: 58, warnings: 0 },
+        omitted: { filled: 1, skipped: 58, warnings: 2 },
         skippedReasonCounts: {
           ...emptySkipReasonCounts(),
           SENSITIVE_FIELD: 30,
@@ -195,7 +195,10 @@ describe('PopupRoot', () => {
     expect(screen.getByText(/無効な項目: 30件/u)).toBeInTheDocument();
     expect(screen.getByText('メール（確度 80%）')).toBeInTheDocument();
     expect(screen.getByText('会社名：最大5文字に短縮')).toBeInTheDocument();
-    expect(screen.getByText('ほか59件を省略')).toBeInTheDocument();
+    expect(screen.getByText('入力項目をほか1件省略')).toBeInTheDocument();
+    expect(screen.getByText('スキップ項目をほか58件省略')).toBeInTheDocument();
+    expect(screen.getByText('警告をほか2件省略')).toBeInTheDocument();
+    expect(screen.queryByText('ほか61件を省略')).not.toBeInTheDocument();
   });
 
   test('注入エラーをcodeと案内付きで表示する', async () => {

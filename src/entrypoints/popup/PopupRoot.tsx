@@ -266,18 +266,27 @@ export const PopupRoot = ({
               </ul>
             </div>
           )}
-          {result.page.omitted.filled +
-            result.page.omitted.skipped +
-            result.page.omitted.warnings >
-            0 && (
+          {result.page.omitted.filled > 0 && (
             <p>
-              {messages.omittedResults.replace(
+              {messages.omittedFilledResults.replace(
                 '{count}',
-                String(
-                  result.page.omitted.filled +
-                    result.page.omitted.skipped +
-                    result.page.omitted.warnings,
-                ),
+                String(result.page.omitted.filled),
+              )}
+            </p>
+          )}
+          {result.page.omitted.skipped > 0 && (
+            <p>
+              {messages.omittedSkippedResults.replace(
+                '{count}',
+                String(result.page.omitted.skipped),
+              )}
+            </p>
+          )}
+          {result.page.omitted.warnings > 0 && (
+            <p>
+              {messages.omittedWarningResults.replace(
+                '{count}',
+                String(result.page.omitted.warnings),
               )}
             </p>
           )}

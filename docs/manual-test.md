@@ -32,7 +32,7 @@ Run only against local fixtures or a dedicated QA environment. Do not use produc
 - Confirm an ambiguous label such as `名前` remains unchanged and appears as ambiguous.
 - Confirm a prefecture select changes only when exactly one option text or value matches.
 - Confirm a recognized non-empty value targeting `maxlength="0"` stays empty, dispatches no `input`/`change` event, and appears under the empty-after-truncation skip reason.
-- On a fixture with more than 50 filled, skipped, and warning entries, confirm each audit list is capped independently, the exact totals remain correct, and the omitted count does not let one category hide another.
+- On a fixture with more than 50 filled, skipped, and warning entries, confirm each audit list is capped independently, the exact totals remain correct, and omitted counts are shown separately for filled, skipped, and warning entries.
 
 ## Phone presets
 
