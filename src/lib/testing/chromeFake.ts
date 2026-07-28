@@ -1,32 +1,28 @@
 import { vi } from 'vitest';
 
-type RuntimeMessageListener = (
-  message: unknown,
-  sender: chrome.runtime.MessageSender,
-  sendResponse: (response: unknown) => void,
-) => boolean | undefined | void;
 type StorageChangeListener = (
   changes: Record<string, chrome.storage.StorageChange>,
   areaName: chrome.storage.AreaName,
 ) => void;
 
 type ChromeFakeOptions = {
-  extensionId?: string;
+  activeTab?: { id?: number; url?: string };
+  executeScriptResult?: { frameId: number; result?: unknown }[];
+  executeScriptError?: Error;
 };
 
 export type ChromeFake = {
   chrome: ChromeApiFake;
-  setRuntimeSender: (sender: chrome.runtime.MessageSender) => void;
 };
 
 type ChromeApiFake = {
-  runtime: {
-    id: string;
-    onMessage: {
-      addListener: (listener: RuntimeMessageListener) => void;
-      removeListener: (listener: RuntimeMessageListener) => void;
-    };
-    sendMessage: (message: unknown) => Promise<unknown>;
+  tabs: {
+    query: (queryInfo: chrome.tabs.QueryInfo) => Promise<chrome.tabs.Tab[]>;
+  };
+  scripting: {
+    executeScript: (
+      injection: Record<string, unknown>,
+    ) => Promise<{ frameId: number; result?: unknown }[]>;
   };
   storage: {
     local: chrome.storage.StorageArea;
@@ -153,10 +149,8 @@ const createStorageArea = (
 export const createChromeFake = (
   options: ChromeFakeOptions = {},
 ): ChromeFake => {
-  const extensionId = options.extensionId ?? 'test-extension-id';
-  const runtimeListeners = new Set<RuntimeMessageListener>();
+  const activeTab = options.activeTab;
   const storageListeners = new Set<StorageChangeListener>();
-  let runtimeSender: chrome.runtime.MessageSender = { id: extensionId };
 
   const emitStorageChanges = (
     changes: Record<string, chrome.storage.StorageChange>,
@@ -168,47 +162,16 @@ export const createChromeFake = (
   };
 
   const chromeFake: ChromeApiFake = {
-    runtime: {
-      id: extensionId,
-      onMessage: {
-        addListener: vi.fn((listener: RuntimeMessageListener) => {
-          runtimeListeners.add(listener);
-        }),
-        removeListener: vi.fn((listener: RuntimeMessageListener) => {
-          runtimeListeners.delete(listener);
-        }),
-      },
-      sendMessage: vi.fn(
-        (message: unknown) =>
-          new Promise<unknown>((resolve) => {
-            let channelKeptOpen = false;
-            let responded = false;
-            const sendResponse = (response: unknown) => {
-              if (responded) {
-                return;
-              }
-
-              responded = true;
-              resolve(response);
-            };
-
-            for (const listener of runtimeListeners) {
-              const keepChannelOpen = listener(
-                message,
-                runtimeSender,
-                sendResponse,
-              );
-
-              if (keepChannelOpen === true) {
-                channelKeptOpen = true;
-              }
-            }
-
-            if (!responded && !channelKeptOpen) {
-              resolve(undefined);
-            }
-          }),
+    tabs: {
+      query: vi.fn(async (_queryInfo: chrome.tabs.QueryInfo) =>
+        activeTab ? ([activeTab] as chrome.tabs.Tab[]) : [],
       ),
+    },
+    scripting: {
+      executeScript: vi.fn(async (_injection: Record<string, unknown>) => {
+        if (options.executeScriptError) throw options.executeScriptError;
+        return options.executeScriptResult ?? [];
+      }),
     },
     storage: {
       local: createStorageArea('local', emitStorageChanges),
@@ -228,9 +191,6 @@ export const createChromeFake = (
 
   return {
     chrome: chromeFake,
-    setRuntimeSender: (sender) => {
-      runtimeSender = sender;
-    },
   };
 };
 

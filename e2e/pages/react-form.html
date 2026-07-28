@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Controlled form fixture</title>
+  </head>
+  <body>
+    <label>メールアドレス<input id="controlled-email" /></label>
+    <output id="email-state"></output>
+    <output id="input-count">0</output>
+    <output id="change-count">0</output>
+    <script>
+      const input = document.querySelector('#controlled-email');
+      const state = document.querySelector('#email-state');
+      const inputCount = document.querySelector('#input-count');
+      const changeCount = document.querySelector('#change-count');
+      const nativeValue = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'value',
+      );
+      let trackedValue = nativeValue.get.call(input);
+      Object.defineProperty(input, 'value', {
+        configurable: true,
+        get() {
+          return nativeValue.get.call(this);
+        },
+        set(value) {
+          trackedValue = String(value);
+          nativeValue.set.call(this, value);
+        },
+      });
+      input.addEventListener('input', () => {
+        const nextValue = nativeValue.get.call(input);
+        if (nextValue === trackedValue) return;
+        trackedValue = nextValue;
+        state.textContent = nextValue;
+        input.dataset.controlledUpdate = 'true';
+        inputCount.textContent = String(Number(inputCount.textContent) + 1);
+      });
+      input.addEventListener('change', () => {
+        changeCount.textContent = String(Number(changeCount.textContent) + 1);
+      });
+    </script>
+  </body>
+</html>

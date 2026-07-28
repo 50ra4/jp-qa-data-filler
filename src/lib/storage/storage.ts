@@ -9,17 +9,15 @@ const getArea = <Key extends StorageKey>(
 export const getStorageValue = async <Key extends StorageKey>(
   key: Key,
 ): Promise<StorageValue<Key>> => {
-  const values = await getArea(key).get({
-    [key]: storageSchema[key].defaultValue,
-  });
-  return values[key] as StorageValue<Key>;
+  const values = await getArea(key).get(key);
+  return storageSchema[key].parse(values[key]) as StorageValue<Key>;
 };
 
 export const setStorageValue = async <Key extends StorageKey>(
   key: Key,
   value: StorageValue<Key>,
 ): Promise<void> => {
-  await getArea(key).set({ [key]: value });
+  await getArea(key).set({ [key]: storageSchema[key].parse(value) });
 };
 
 export const removeStorageValue = async <Key extends StorageKey>(
@@ -42,8 +40,8 @@ export const onStorageValueChanged = <Key extends StorageKey>(
 
     const change = changes[key];
     listener(
-      (change.newValue ?? storageSchema[key].defaultValue) as StorageValue<Key>,
-      (change.oldValue ?? storageSchema[key].defaultValue) as StorageValue<Key>,
+      storageSchema[key].parse(change.newValue) as StorageValue<Key>,
+      storageSchema[key].parse(change.oldValue) as StorageValue<Key>,
     );
   };
 

@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "JP QA Data Filler"
+  },
+  "extensionDevName": {
+    "message": "[DEV] JP QA Data Filler"
+  },
+  "extensionDescription": {
+    "message": "Fill Japanese forms with synthetic QA data. It does not click submit or call submission APIs; page scripts may react to events."
+  }
+}

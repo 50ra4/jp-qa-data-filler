@@ -12,7 +12,7 @@
 次期バージョンを指定すると、`package.json` と `package-lock.json` が同時に更新される。
 
 ```sh
-npm version 1.1.0 --no-git-tag-version
+npm version 0.2.0 --no-git-tag-version
 npm ci
 npm run check-type
 npm run lint
@@ -35,13 +35,13 @@ lockfile からは同一内容の zip が生成される。`npm run zip` は互�
 ```sh
 git switch main
 git pull --ff-only
-git tag -a v1.1.0 -m "v1.1.0"
-git push origin v1.1.0
+git tag -a v0.2.0 -m "v0.2.0"
+git push origin v0.2.0
 ```
 
-プレリリースは package version とタグの両方を `1.1.0-rc.1` / `v1.1.0-rc.1`
+プレリリースは package version とタグの両方を `0.2.0-rc.1` / `v0.2.0-rc.1`
 のように一致させる。タグと `package.json` の version が一致しない場合、Release workflow は失敗する。
-Chrome Manifest の `version` には数値部分 (`1.1.0`)、`version_name` には完全なプレリリース版を記録する。
+Chrome Manifest の `version` には数値部分 (`0.2.0`)、`version_name` には完全なプレリリース版を記録する。
 
 タグ push 後、GitHub Actions が type check、lint、unit test、manifest 検証、実 Chromium E2E を実行する。
 すべて成功した場合だけ、自動生成ノートと `extension.zip` を含む GitHub Release が作成される。

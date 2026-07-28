@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Shadow form fixture</title>
+  </head>
+  <body>
+    <div id="open-host"></div>
+    <div id="closed-host"></div>
+    <output id="closed-value">untouched</output>
+    <script>
+      const openRoot = document
+        .querySelector('#open-host')
+        .attachShadow({ mode: 'open' });
+      openRoot.innerHTML = '<label>メールアドレス<input></label>';
+
+      const closedRoot = document
+        .querySelector('#closed-host')
+        .attachShadow({ mode: 'closed' });
+      const closedInput = document.createElement('input');
+      closedInput.setAttribute('autocomplete', 'email');
+      closedInput.addEventListener('input', () => {
+        document.querySelector('#closed-value').textContent = closedInput.value;
+      });
+      closedRoot.append(closedInput);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Standard form fixture</title>
+  </head>
+  <body>
+    <form id="fixture-form">
+      <input autocomplete="name" />
+      <input autocomplete="family-name" />
+      <input autocomplete="given-name" />
+      <label>氏名カナ<input /></label>
+      <label>姓カナ<input /></label>
+      <label>名カナ<input /></label>
+      <input id="email" autocomplete="email" />
+      <input autocomplete="tel" />
+      <input autocomplete="postal-code" />
+      <select autocomplete="address-level1">
+        <option value="">選択してください</option>
+        <option>北海道</option>
+        <option>東京都</option>
+        <option>大阪府</option>
+        <option>京都府</option>
+        <option>福岡県</option>
+        <option>愛知県</option>
+      </select>
+      <input autocomplete="address-level2" />
+      <input autocomplete="address-line1" />
+      <textarea autocomplete="street-address"></textarea>
+      <input autocomplete="organization" />
+
+      <input autocomplete="current-password" />
+      <input autocomplete="one-time-code" />
+      <input autocomplete="cc-number" />
+      <input
+        data-sensitive-japanese
+        autocomplete="tel"
+        aria-label="ワンタイムパスワード"
+      />
+      <input data-sensitive-hidden type="hidden" autocomplete="email" />
+      <input data-explicit-disabled disabled autocomplete="email" />
+      <fieldset disabled>
+        <input data-fieldset-disabled autocomplete="email" />
+      </fieldset>
+      <input readonly autocomplete="email" />
+      <button type="submit">送信</button>
+    </form>
+    <output id="submit-count">0</output>
+    <script>
+      document
+        .querySelector('#fixture-form')
+        .addEventListener('submit', (event) => {
+          event.preventDefault();
+          const output = document.querySelector('#submit-count');
+          output.textContent = String(Number(output.textContent) + 1);
+        });
+    </script>
+  </body>
+</html>

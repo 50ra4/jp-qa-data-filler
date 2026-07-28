@@ -1,30 +1,33 @@
-# crx-vite-ts-react-template
+# jp-qa-data-filler
 
-Chrome extension (Manifest V3) template built with Vite + TypeScript + React.
-Surfaces: popup, options page, background service worker, content script — each
-lives under `src/entrypoints/<surface>/`. Root-level HTML files (popup/options)
-load `src/entrypoints/<surface>/<surface>.tsx`; the manifest is generated from
-`manifest.config.ts` via `@crxjs/vite-plugin`; `npm run build` outputs to
-`extension/` (gitignored). `src/lib/` holds shared modules entrypoints may
-import (never the reverse); `src/examples/` holds deletable sample code. See
-README's "Architecture" section for the full dependency-direction rules.
+Chrome Manifest V3 extension built with Vite, TypeScript, and React. The product
+has exactly two extension surfaces: popup and options. It has no background
+service worker, content script, runtime messaging layer, or persistent host
+access. The popup invokes `src/lib/injection/executeFill.ts` after an explicit
+user action; that wrapper uses `activeTab` and `scripting` to run the
+self-contained top-frame filler.
+
+Root-level `popup.html` and `options.html` load their matching entrypoints under
+`src/entrypoints/`. Shared product code lives under `src/lib/` (generator,
+injection, i18n, storage, and testing). The manifest is generated from
+`manifest.config.ts`; `npm run build` outputs to `extension/` (gitignored).
 
 ## Commands
 
-| Command | What it does | Notes |
-| --- | --- | --- |
-| `npm ci` | Install deps | 407 packages, verified OK |
-| `npm run dev` | Vite dev server with HMR | via `@crxjs/vite-plugin` |
-| `npm run build` | Build to `extension/` | deletes and recreates the dir |
-| `npm run package` | Build, verify manifest, create reproducible `extension.zip` | archives distributable files from `extension/` |
-| `npm run verify` | check-type → lint → test → build → verify:manifest, in series | the safety contract for most changes; excludes e2e for speed |
-| `npm run verify:full` | `verify` then `npm run e2e` | full contract; requires installed Chromium |
-| `npm run e2e` | Run Playwright Chromium smoke tests | requires a prior build and installed Chromium |
-| `npm run check-type` | `tsc --noEmit` | |
-| `npm test` | Run Vitest | src tests use jsdom; script tests use Node |
-| `npm run lint` | `oxlint` (check-only) | no file mutation; pre-commit runs the staged-only equivalent via lint-staged |
-| `npm run format` | `prettier --write` | rewrites files on disk; pre-commit runs the staged-only equivalent via lint-staged |
-| `npm run zip` | Alias for `npm run package` | |
+| Command               | What it does                                                  | Notes                                                                              |
+| --------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------- |
+| `npm ci`              | Install deps                                                  | 407 packages, verified OK                                                          |
+| `npm run dev`         | Vite dev server with HMR                                      | via `@crxjs/vite-plugin`                                                           |
+| `npm run build`       | Build to `extension/`                                         | deletes and recreates the dir                                                      |
+| `npm run package`     | Build, verify manifest, create reproducible `extension.zip`   | archives distributable files from `extension/`                                     |
+| `npm run verify`      | check-type → lint → test → build → verify:manifest, in series | the safety contract for most changes; excludes e2e for speed                       |
+| `npm run verify:full` | `verify` then `npm run e2e`                                   | full contract; requires installed Chromium                                         |
+| `npm run e2e`         | Run Playwright Chromium smoke tests                           | requires a prior build and installed Chromium                                      |
+| `npm run check-type`  | `tsc --noEmit`                                                |                                                                                    |
+| `npm test`            | Run Vitest                                                    | src tests use jsdom; script tests use Node                                         |
+| `npm run lint`        | `oxlint` (check-only)                                         | no file mutation; pre-commit runs the staged-only equivalent via lint-staged       |
+| `npm run format`      | `prettier --write`                                            | rewrites files on disk; pre-commit runs the staged-only equivalent via lint-staged |
+| `npm run zip`         | Alias for `npm run package`                                   |                                                                                    |
 
 `.nvmrc` pins Node 24, matching the `engines.node` (`>=24.0.0`) requirement.
 
@@ -43,11 +46,11 @@ only tells you which to run.
 
 Minimum verification per change type:
 
-| Change | Run |
-| --- | --- |
-| `src/lib/**`, types, unit tests, `src/examples/**` | `npm run verify` |
-| `manifest.config.ts`, permissions, CSP | `npm run verify` (asserts the manifest) |
-| entrypoint wiring, messaging/storage round-trips, anything e2e exercises | `npm run verify:full` |
+| Change                                                                                  | Run                                     |
+| --------------------------------------------------------------------------------------- | --------------------------------------- |
+| `src/lib/**`, types, unit tests                                                         | `npm run verify`                        |
+| `manifest.config.ts`, permissions, CSP                                                  | `npm run verify` (asserts the manifest) |
+| popup/options wiring, active-tab injection, storage round-trips, anything e2e exercises | `npm run verify:full`                   |
 
 CI is not changed by this file: it already runs the same underlying checks as
 separate jobs. `verify` / `verify:full` are the local and agent-facing entry points.
@@ -61,15 +64,23 @@ not this file — is the authority; the note explains the intent a check cannot.
   `entrypoints`.** `src/lib/` stays reusable and unit-testable in isolation
   (with `installChromeFake` from `src/lib/testing/chromeFake.ts`); a back-edge would
   couple shared code to one surface.
-- **Entrypoints do not import each other directly.** Surfaces are separate runtime
-  contexts (popup / options / background / content); they communicate through the
-  typed messaging layer in `src/lib/messaging/`, not shared module state.
+- **Entrypoints do not import each other directly.** Popup and options are
+  separate runtime contexts; reusable behavior belongs in `src/lib/`.
 - **Real `chrome.*` access lives only inside `src/lib/`.** Outside `src/lib/**`,
   referencing the `chrome` global is an Oxlint error (`no-restricted-globals` /
   `no-restricted-properties` override in `.oxlintrc.json`); route the call through a
   thin `src/lib/` wrapper instead. Type-only references via the `chrome` namespace
   (`@types/chrome`) are allowed everywhere. An unavoidable exception must carry a
   reasoned `oxlint-disable` comment so the boundary violation stays visible.
+- **The production surface and permission set is fixed.** The manifest has popup
+  and options only, permissions `activeTab`, `scripting`, and `storage`, and no
+  background, `content_scripts`, host permissions, or
+  `web_accessible_resources`. Expanding this boundary requires explicit owner
+  sign-off.
+- **Form event side effects are disclosed.** The filler dispatches bubbling,
+  composed `input` and `change` events for controlled forms. Host-page scripts
+  can react by autosaving, submitting, or transmitting values, so UI and docs
+  must not claim the page itself cannot do so.
 
 ## Recipes
 
@@ -77,14 +88,11 @@ Minimal, real code paths for the common changes. Each recipe ends with the
 verification its change type calls for in **Verification contract** above — not a
 blanket command.
 
-- **Add a message type.** In `src/lib/messaging/messages.ts`, add one entry to
-  `messages` via `defineMessage(isRequest, isResponse)` (hand-written type-guard
-  predicates — no runtime schema dependency). Register the handler in
-  `src/entrypoints/background/background.ts` under `addMessageListeners({ ... })`, and
-  send from a surface with `sendMessage(name, payload)`. The generic engine in
-  `createMessaging.ts` needs no change; sender check and payload guards are automatic.
-  This touches entrypoint wiring (`background.ts` + a surface), so verify with
-  **`npm run verify:full`** — only the real-Chromium e2e exercises the messaging round-trip.
+- **Change field detection or filling.** Add a failing colocated test in
+  `src/lib/injection/fillPage.test.ts` first, then update `fillPage.ts`. Preserve
+  sensitive-field exclusion, top-frame-only execution, deterministic results,
+  and bubbling/composed `input` and `change` events. Run **`npm run verify:full`**
+  because real Chromium covers the injected controlled-form flow.
 - **Add a storage key.** In `src/lib/storage/schema.ts`, add the key to the
   `AppStorageValues` type and to `storageSchema` (`area` + `defaultValue`). Everything
   else (`getStorageValue` / `setStorageValue` / `removeStorageValue` /
@@ -102,10 +110,12 @@ blanket command.
 Do not make these without explicit owner sign-off. Most are enforced by
 `scripts/verify-manifest.mjs`, which fails the build on violation:
 
+- Adding a background worker, content script, runtime messaging layer, or host
+  access without explicit owner sign-off.
 - Adding a manifest `permission` / `host_permission` without updating the
   `verify-manifest.mjs` allowlist (and without a reason to hold the new privilege).
-- Adding an external runtime dependency to `src/lib/` — the messaging and storage
-  layers are dependency-free by design; keep them so.
+- Adding an external runtime dependency to `src/lib/` — generation, injection,
+  and storage are dependency-free by design; keep them so.
 - Relaxing the CSP. `verify:manifest` pins
   `content_security_policy.extension_pages` to `script-src 'self'; object-src 'self';`.
 - Declaring `externally_connectable` — `verify:manifest` rejects it outright.
@@ -122,14 +132,13 @@ Do not make these without explicit owner sign-off. Most are enforced by
 
 Read these only when the row matches your task — they are excluded from the always-loaded context by design.
 
-| When you are... | Read |
-| --- | --- |
-| editing any `.ts`/`.tsx` file | `.claude/rules/typescript-react.md` |
-| touching `manifest.config.ts`, background, or content scripts | `.claude/rules/chrome-extension.md` |
-| writing tests | `.claude/rules/testing.md` |
-| adding an extension surface (popup/options/background/content script) | `.claude/skills/add-entrypoint/SKILL.md` |
-| turning this template into a real extension project | `.claude/skills/adapt-template/SKILL.md` |
-| releasing/packaging/deploying | `.claude/skills/release/SKILL.md` |
+| When you are...                                                               | Read                                     |
+| ----------------------------------------------------------------------------- | ---------------------------------------- |
+| editing any `.ts`/`.tsx` file                                                 | `.claude/rules/typescript-react.md`      |
+| touching `manifest.config.ts`, `src/lib/injection/**`, or Chrome API wrappers | `.claude/rules/chrome-extension.md`      |
+| writing tests                                                                 | `.claude/rules/testing.md`               |
+| rewiring popup or options                                                     | `.claude/skills/add-entrypoint/SKILL.md` |
+| releasing/packaging/deploying                                                 | `.claude/skills/release/SKILL.md`        |
 
 ## Git
 

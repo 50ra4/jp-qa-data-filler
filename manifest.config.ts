@@ -1,13 +1,8 @@
 import { defineManifest } from '@crxjs/vite-plugin';
-import { name, version } from './package.json';
+import { version } from './package.json';
 import { createManifestVersion } from './scripts/manifest-version.mjs';
 
 const manifestVersion = createManifestVersion(version);
-
-const EXTENSION_NAMES = {
-  build: name,
-  serve: `[DEV] ${name}`,
-} as const;
 
 const createIconFileSuffix = (command: 'build' | 'serve') =>
   command === 'serve' ? '-dev' : '';
@@ -16,8 +11,10 @@ const createIconFileSuffix = (command: 'build' | 'serve') =>
 export default defineManifest(({ command }) => ({
   ...manifestVersion,
   manifest_version: 3,
-  name: EXTENSION_NAMES[command],
-  description: '',
+  default_locale: 'en',
+  name:
+    command === 'serve' ? '__MSG_extensionDevName__' : '__MSG_extensionName__',
+  description: '__MSG_extensionDescription__',
   icons: {
     '16': `public/logo/icon16${createIconFileSuffix(command)}.png`,
     '48': `public/logo/icon48${createIconFileSuffix(command)}.png`,
@@ -28,6 +25,7 @@ export default defineManifest(({ command }) => ({
   },
   options_ui: {
     page: 'options.html',
+    open_in_tab: true,
   },
   ...(command === 'build'
     ? {
@@ -38,14 +36,5 @@ export default defineManifest(({ command }) => ({
     : {}),
   // Declare only permissions for Chrome APIs that the extension actually uses.
   // Keep the allowlists in scripts/verify-manifest.mjs in sync when adding one.
-  permissions: ['storage'],
-  content_scripts: [
-    {
-      matches: ['https://example.com/*'],
-      js: ['src/entrypoints/content/sample.tsx'],
-    },
-  ],
-  background: {
-    service_worker: 'src/entrypoints/background/background.ts',
-  },
+  permissions: ['activeTab', 'scripting', 'storage'],
 }));

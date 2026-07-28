@@ -1,7 +1,7 @@
 {
-  "name": "crx-vite-ts-react-template",
-  "version": "1.0.0",
-  "description": "Chrome extension (MV3) template with Vite, TypeScript, React & CRXJS — all four surfaces (popup, options, background, content script) wired via typed messaging & storage, plus a build/verify/release pipeline.",
+  "name": "jp-qa-data-filler",
+  "version": "0.1.0",
+  "description": "Safely fill Japanese web forms with deterministic synthetic QA data on explicit user action.",
   "keywords": [
     "chrome-extension",
     "manifest-v3",
@@ -9,10 +9,9 @@
     "typescript",
     "react",
     "crxjs",
-    "template",
-    "boilerplate",
-    "typed-messaging",
-    "typed-storage"
+    "testing",
+    "synthetic-data",
+    "japanese"
   ],
   "main": "index.js",
   "scripts": {
@@ -37,7 +36,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/50ra4/crx-vite-ts-react-template.git"
+    "url": "git+https://github.com/50ra4/jp-qa-data-filler.git"
   },
   "author": "50ra4",
   "license": "MIT",
@@ -45,9 +44,9 @@
     "node": ">=24.0.0"
   },
   "bugs": {
-    "url": "https://github.com/50ra4/crx-vite-ts-react-template/issues"
+    "url": "https://github.com/50ra4/jp-qa-data-filler/issues"
   },
-  "homepage": "https://github.com/50ra4/crx-vite-ts-react-template#readme",
+  "homepage": "https://github.com/50ra4/jp-qa-data-filler#readme",
   "dependencies": {
     "react": "19.2.7",
     "react-dom": "19.2.7"

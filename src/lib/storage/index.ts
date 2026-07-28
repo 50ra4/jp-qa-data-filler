@@ -1,5 +1,6 @@
-export { storageSchema } from './schema';
+export { DEFAULT_FILLER_SETTINGS, storageSchema } from './schema';
 export type {
+  FillerSettings,
   StorageAreaName,
   StorageKey,
   StorageSchema,

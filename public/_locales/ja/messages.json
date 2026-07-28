@@ -1,0 +1,11 @@
+{
+  "extensionName": {
+    "message": "JP QA Data Filler"
+  },
+  "extensionDevName": {
+    "message": "[DEV] JP QA Data Filler"
+  },
+  "extensionDescription": {
+    "message": "日本語フォームへ合成QAデータを入力します。拡張機能は送信操作を行いませんが、ページ側の処理がイベントに反応する場合があります。"
+  }
+}

@@ -16,25 +16,6 @@ describe('Chrome fake', () => {
     ).resolves.toEqual({ present: 'value' });
   });
 
-  it('dispatches a runtime message to every registered listener', async () => {
-    const fake = createChromeFake();
-    const asyncListener = vi.fn((_message, _sender, sendResponse) => {
-      queueMicrotask(() => sendResponse('async response'));
-      return true;
-    });
-    const syncListener = vi.fn((_message, _sender, sendResponse) => {
-      sendResponse('sync response');
-    });
-    fake.chrome.runtime.onMessage.addListener(asyncListener);
-    fake.chrome.runtime.onMessage.addListener(syncListener);
-
-    await expect(fake.chrome.runtime.sendMessage({})).resolves.toBe(
-      'sync response',
-    );
-    expect(asyncListener).toHaveBeenCalledOnce();
-    expect(syncListener).toHaveBeenCalledOnce();
-  });
-
   it('does not emit a storage change when a value remains unchanged', async () => {
     const fake = createChromeFake();
     const listener = vi.fn();
@@ -82,5 +63,35 @@ describe('Chrome fake', () => {
 
     await fake.chrome.storage.local.clear();
     await expect(fake.chrome.storage.local.get()).resolves.toEqual({});
+  });
+
+  it('returns the configured active tab', async () => {
+    const activeTab = { id: 12, url: 'https://example.test/form' };
+    const fake = createChromeFake({ activeTab });
+
+    await expect(
+      fake.chrome.tabs.query({ active: true, currentWindow: true }),
+    ).resolves.toEqual([activeTab]);
+  });
+
+  it('returns or rejects with the configured executeScript outcome', async () => {
+    const scriptResult = [{ frameId: 0, result: { ok: true } }];
+    const success = createChromeFake({ executeScriptResult: scriptResult });
+    const failure = createChromeFake({
+      executeScriptError: new Error('denied'),
+    });
+
+    await expect(
+      success.chrome.scripting.executeScript({
+        target: { tabId: 12 },
+        func: () => true,
+      }),
+    ).resolves.toEqual(scriptResult);
+    await expect(
+      failure.chrome.scripting.executeScript({
+        target: { tabId: 12 },
+        func: () => true,
+      }),
+    ).rejects.toThrow('denied');
   });
 });

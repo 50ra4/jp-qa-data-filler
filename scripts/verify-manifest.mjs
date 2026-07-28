@@ -3,13 +3,24 @@ import { isAbsolute, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { createManifestVersion } from './manifest-version.mjs';
+import { MANIFEST_DESCRIPTION } from './product-metadata.mjs';
 
 const EXPECTED_CSP = "script-src 'self'; object-src 'self';";
-const EXPECTED_MATCHES = ['https://example.com/*'];
-const EXPECTED_PERMISSIONS = ['storage'];
+const EXPECTED_PERMISSIONS = ['activeTab', 'scripting', 'storage'];
 const EXPECTED_HOST_PERMISSIONS = [];
-const GLOB = /[*?[\]{}]/u;
-const CONCRETE_JS_ASSET = /^assets\/[^*?[\]{}]+\.js$/u;
+const EXPECTED_TOP_LEVEL_KEYS = [
+  'action',
+  'content_security_policy',
+  'default_locale',
+  'description',
+  'icons',
+  'manifest_version',
+  'name',
+  'options_ui',
+  'permissions',
+  'version',
+  'version_name',
+];
 
 const extensionDirectory = fileURLToPath(
   new URL('../extension/', import.meta.url),
@@ -96,6 +107,15 @@ if (!isRecord(packageJson) || typeof packageJson.version !== 'string') {
 }
 
 const expectedManifestVersion = createManifestVersion(packageJson.version);
+const actualTopLevelKeys = Object.keys(manifest).toSorted();
+const allowedTopLevelKeys = EXPECTED_TOP_LEVEL_KEYS.filter(
+  (key) => key !== 'version_name' || expectedManifestVersion.version_name,
+).toSorted();
+
+report(
+  actualTopLevelKeys.every((key) => allowedTopLevelKeys.includes(key)),
+  `manifest contains unexpected top-level keys: ${JSON.stringify(actualTopLevelKeys.filter((key) => !allowedTopLevelKeys.includes(key)))}.`,
+);
 
 report(
   manifest.version === expectedManifestVersion.version,
@@ -109,6 +129,18 @@ report(
 report(
   manifest.manifest_version === 3,
   `manifest_version must be 3; received ${JSON.stringify(manifest.manifest_version)}.`,
+);
+report(
+  manifest.default_locale === 'en',
+  `default_locale must equal "en"; received ${JSON.stringify(manifest.default_locale)}.`,
+);
+report(
+  manifest.name === '__MSG_extensionName__',
+  `name must equal "__MSG_extensionName__"; received ${JSON.stringify(manifest.name)}.`,
+);
+report(
+  manifest.description === '__MSG_extensionDescription__',
+  `description must equal "__MSG_extensionDescription__"; received ${JSON.stringify(manifest.description)}.`,
 );
 expectSet(manifest.permissions, EXPECTED_PERMISSIONS, 'permissions');
 expectSet(
@@ -136,12 +168,22 @@ if (manifest.action?.default_icon !== undefined) {
 if (manifest.action?.default_popup !== undefined) {
   addReference(manifest.action.default_popup, 'action.default_popup');
 }
+report(
+  manifest.action?.default_popup === 'popup.html',
+  'action.default_popup must equal "popup.html".',
+);
 if (manifest.options_ui?.page !== undefined) {
   addReference(manifest.options_ui.page, 'options_ui.page');
 }
-if (manifest.background?.service_worker !== undefined) {
-  addReference(manifest.background.service_worker, 'background.service_worker');
-}
+report(
+  manifest.options_ui?.page === 'options.html',
+  'options_ui.page must equal "options.html".',
+);
+report(
+  manifest.options_ui?.open_in_tab === true,
+  'options_ui.open_in_tab must be true.',
+);
+report(manifest.background === undefined, 'background must not be declared.');
 
 report(
   Array.isArray(manifest.content_scripts ?? []),
@@ -150,25 +192,7 @@ report(
 const contentScripts = Array.isArray(manifest.content_scripts)
   ? manifest.content_scripts
   : [];
-contentScripts.forEach((entry, index) => {
-  if (!isRecord(entry)) {
-    errors.push(`content_scripts.${index} must be an object.`);
-    return;
-  }
-  expectSet(
-    entry.matches,
-    EXPECTED_MATCHES,
-    `content_scripts.${index}.matches`,
-  );
-  for (const field of ['js', 'css']) {
-    if (entry[field] === undefined) continue;
-    const paths =
-      readStrings(entry[field], `content_scripts.${index}.${field}`) ?? [];
-    paths.forEach((path, pathIndex) =>
-      addReference(path, `content_scripts.${index}.${field}.${pathIndex}`),
-    );
-  }
-});
+report(contentScripts.length === 0, 'content_scripts must be empty or absent.');
 
 report(
   Array.isArray(manifest.web_accessible_resources ?? []),
@@ -177,43 +201,10 @@ report(
 const webAccessibleResources = Array.isArray(manifest.web_accessible_resources)
   ? manifest.web_accessible_resources
   : [];
-webAccessibleResources.forEach((entry, index) => {
-  if (!isRecord(entry)) {
-    errors.push(`web_accessible_resources.${index} must be an object.`);
-    return;
-  }
-
-  expectSet(
-    entry.matches,
-    EXPECTED_MATCHES,
-    `web_accessible_resources.${index}.matches`,
-  );
-  expectSet(
-    entry.extension_ids,
-    [],
-    `web_accessible_resources.${index}.extension_ids`,
-  );
-  report(
-    typeof entry.use_dynamic_url === 'boolean',
-    `web_accessible_resources.${index}.use_dynamic_url must be explicit and boolean; received ${JSON.stringify(entry.use_dynamic_url)}.`,
-  );
-  const field = `web_accessible_resources.${index}.resources`;
-  const resources = readStrings(entry.resources, field) ?? [];
-  report(resources.length > 0, `${field} must not be empty.`);
-
-  resources.forEach((path, pathIndex) => {
-    const resourceField = `${field}.${pathIndex}`;
-    report(
-      !GLOB.test(path),
-      `${resourceField} must not contain a glob: ${path}`,
-    );
-    report(
-      CONCRETE_JS_ASSET.test(path),
-      `${resourceField} must expose only a concrete JS asset: ${path}`,
-    );
-    addReference(path, resourceField);
-  });
-});
+report(
+  webAccessibleResources.length === 0,
+  'web_accessible_resources must be empty or absent.',
+);
 
 const verifyReference = async ({ field, value }) => {
   const absolutePath = resolve(extensionDirectory, value);
@@ -241,6 +232,46 @@ const verifyReference = async ({ field, value }) => {
 
 const referenceErrors = await Promise.all(references.map(verifyReference));
 errors.push(...referenceErrors.filter(Boolean));
+
+try {
+  const [english, japanese] = await Promise.all(
+    ['en', 'ja'].map((locale) =>
+      readFile(
+        resolve(extensionDirectory, `_locales/${locale}/messages.json`),
+        'utf8',
+      ).then(JSON.parse),
+    ),
+  );
+  report(
+    english.extensionName?.message === 'JP QA Data Filler',
+    'English extensionName locale message is invalid.',
+  );
+  report(
+    english.extensionDevName?.message === '[DEV] JP QA Data Filler',
+    'English extensionDevName locale message is invalid.',
+  );
+  report(
+    english.extensionDescription?.message === MANIFEST_DESCRIPTION,
+    'English extensionDescription locale message is invalid.',
+  );
+  report(
+    typeof japanese.extensionName?.message === 'string' &&
+      japanese.extensionName.message.length > 0,
+    'Japanese extensionName locale message is invalid.',
+  );
+  report(
+    japanese.extensionDevName?.message === '[DEV] JP QA Data Filler',
+    'Japanese extensionDevName locale message is invalid.',
+  );
+  report(
+    typeof japanese.extensionDescription?.message === 'string' &&
+      japanese.extensionDescription.message.length > 0,
+    'Japanese extensionDescription locale message is invalid.',
+  );
+} catch (error) {
+  const message = error instanceof Error ? error.message : String(error);
+  errors.push(`locale messages could not be verified: ${message}`);
+}
 
 if (errors.length > 0) {
   console.error(
